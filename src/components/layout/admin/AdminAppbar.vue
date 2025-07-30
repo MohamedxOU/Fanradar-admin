@@ -1,8 +1,14 @@
 <template>
   <header class="sticky bg-base-100 shadow-md">
     <div class="flex items-center justify-between px-6 py-4">
+      <!-- Logo Section -->
+
       <!-- Left side - Search -->
       <div class="flex items-center flex-1 max-w-md">
+        <router-link to="/" class="flex items-center mr-6">
+
+        <span v-if="!isCollapsed || isMobile" class="text-lg font-semibold text-base-content ml-2">LOGO</span>
+      </router-link>
         <div class="relative w-full">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="w-5 h-5 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">

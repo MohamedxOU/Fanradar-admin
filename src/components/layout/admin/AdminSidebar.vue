@@ -25,15 +25,7 @@
       <ChevronRightIcon v-else class="h-4 w-4 text-base-content" />
     </button>
 
-    <!-- Logo Section -->
-    <div class="p-10 flex items-center justify-center h-16">
-      <router-link to="/" class="flex items-center">
-        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
 
-        </div>
-        <span v-if="!isCollapsed || isMobile" class="text-lg font-semibold text-base-content ml-2">Sequence</span>
-      </router-link>
-    </div>
 
     <!-- Navigation Section -->
     <nav class="flex-1 p-2 overflow-y-auto">
@@ -146,24 +138,7 @@
       </div>
     </nav>
 
-    <!-- Bottom Section -->
-    <div class="p-2 border-t border-base-300">
-      <ul class="space-y-1">
-        <li v-for="item in bottomItems" :key="item.route">
-          <router-link :to="item.route" class="flex items-center px-2 py-2 text-sm rounded-lg transition-colors group"
-            :class="[
-              isCollapsed && !isMobile ? 'justify-center' : '',
-              $route.path.startsWith(item.route)
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-base-content hover:bg-base-300'
-            ]" :title="isCollapsed && !isMobile ? item.label : ''" @click="isMobile && toggleMobileSidebar()">
-            <component :is="item.icon" class="w-5 h-5 flex-shrink-0"
-              :class="[isCollapsed && !isMobile ? '' : 'mr-3']" />
-            <span v-if="!isCollapsed || isMobile">{{ item.label }}</span>
-          </router-link>
-        </li>
-      </ul>
-    </div>
+
   </aside>
 </template>
 
@@ -183,12 +158,10 @@ import {
   ClipboardDocumentIcon as FansContentIcon,
   PresentationChartLineIcon as FandomTrackerIcon,
   ChartBarSquareIcon,
-  Cog6ToothIcon as SettingsIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   BarsArrowDownIcon,
-  ArrowLeftEndOnRectangleIcon
 } from '@heroicons/vue/24/outline'
 import HomeIcon from '@/icons/HomeIcon.vue'
 
@@ -285,10 +258,7 @@ const otherItems = [
 ]
 
 
-const bottomItems = [
-  { route: '/settings', label: 'Settings', icon: SettingsIcon },
-  { route: '/logout', label: 'Logout', icon: ArrowLeftEndOnRectangleIcon }
-]
+
 </script>
 
 <style scoped>

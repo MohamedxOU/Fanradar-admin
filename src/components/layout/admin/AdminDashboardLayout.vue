@@ -1,12 +1,12 @@
 <template>
-  <div class="app-layout flex h-screen bg-base-100">
-    <!-- Sidebar -->
-    <AppSidebar class="w-64 flex-shrink-0" />
+  <div class="app-layout flex flex-col h-screen bg-base-100">
+    <!-- Full-width Header -->
+    <AppHeader class="w-full flex-shrink-0" />
 
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- Header -->
-      <AppHeader class="flex-shrink-0" />
+    <!-- Main Content Area (sidebar + content) -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Sidebar -->
+      <AppSidebar class="flex-shrink-0" />
 
       <!-- Dynamic Content -->
       <main class="flex-1 overflow-y-auto p-6">
