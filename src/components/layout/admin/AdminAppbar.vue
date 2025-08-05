@@ -5,9 +5,10 @@
 
       <!-- Left side - Search -->
       <div class="flex items-center flex-1 max-w-md">
-        <router-link to="/" class="flex items-center mr-6">
+        <router-link to="/" class="flex items-center mr-12">
+          <img class="h-10 w-auto" src="/images/FanRadar_logo.png" />
+        <span v-if="!isCollapsed || isMobile" class="text-lg font-semibold text-base-content ml-2">FanRadar</span>
 
-        <span v-if="!isCollapsed || isMobile" class="text-lg font-semibold text-base-content ml-2">LOGO</span>
       </router-link>
         <div class="relative w-full">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
