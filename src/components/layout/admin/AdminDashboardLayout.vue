@@ -1,7 +1,7 @@
 <template>
   <div class="app-layout flex flex-col h-screen bg-base-100">
     <!-- Full-width Header -->
-    <AppHeader class="w-full flex-shrink-0" />
+    <AppHeader class="w-full flex-shrink-0 z-40" />
 
     <!-- Main Content Area (sidebar + content) -->
     <div class="flex flex-1 overflow-hidden">

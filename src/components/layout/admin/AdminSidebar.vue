@@ -165,6 +165,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   BarsArrowDownIcon,
+  Cog6ToothIcon
 } from '@heroicons/vue/24/outline'
 import HomeIcon from '@/icons/HomeIcon.vue'
 
@@ -256,6 +257,7 @@ const shopDropItems = [
 const otherItems = [
 {route : '/analytics', label: 'Analytics', icon: ChartBarSquareIcon},
 { route: '/footer-legal', label: 'Footer management', icon: BarsArrowDownIcon },
+{ route: '/settings', label: 'Settings', icon: Cog6ToothIcon },
 
 
 ]

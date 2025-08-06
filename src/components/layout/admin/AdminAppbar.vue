@@ -7,9 +7,8 @@
       <div class="flex items-center flex-1 max-w-md">
         <router-link to="/" class="flex items-center mr-12">
           <img class="h-10 w-auto" src="/images/FanRadar_logo.png" />
-        <span v-if="!isCollapsed || isMobile" class="text-lg font-semibold text-base-content ml-2">FanRadar</span>
-
-      </router-link>
+          <span v-if="!isCollapsed || isMobile" class="text-lg font-semibold text-base-content ml-2">FanRadar</span>
+        </router-link>
         <div class="relative w-full">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="w-5 h-5 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,24 +47,66 @@
           </svg>
         </button>
 
-        <!-- User Profile -->
-        <div class="flex items-center space-x-3 cursor-pointer group">
-          <div class="text-right">
-            <p class="text-sm font-medium text-base-content group-hover:text-primary transition-colors">
-              Totok Michael
-            </p>
-            <p class="text-xs text-base-content/60">
-              tmichael20@mail.com
-            </p>
+        <!-- User Profile with Dropdown -->
+        <div class="relative">
+          <div
+            class="flex items-center space-x-3 cursor-pointer group"
+            @click="toggleUserDropdown"
+          >
+            <div class="text-right">
+              <p class="text-sm font-medium text-base-content group-hover:text-primary transition-colors">
+                Totok Michael
+              </p>
+              <p class="text-xs text-base-content/60">
+                tmichael20@mail.com
+              </p>
+            </div>
+            <div class="relative">
+              <img
+                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format"
+                alt="Totok Michael"
+                class="w-10 h-10 rounded-full border-2 border-base-300 group-hover:border-primary transition-colors"
+              />
+              <!-- Online status indicator -->
+              <span class="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-base-100"></span>
+            </div>
           </div>
-          <div class="relative">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format"
-              alt="Totok Michael"
-              class="w-10 h-10 rounded-full border-2 border-base-300 group-hover:border-primary transition-colors"
-            />
-            <!-- Online status indicator -->
-            <span class="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-base-100"></span>
+
+          <!-- Dropdown Menu -->
+          <div
+            v-show="showUserDropdown"
+            class="absolute right-0 mt-2 w-48 bg-base-100 rounded-md shadow-lg py-1 z-50 border border-base-300"
+            @click.stop
+          >
+            <router-link
+              to="/profile"
+              class="block px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+              @click="showUserDropdown = false"
+            >
+              Profile
+            </router-link>
+            <a
+              href="#"
+              class="block px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+              @click="visitWebsite"
+            >
+              Visit Website
+            </a>
+            <a
+              href="#"
+              class="block px-4 py-2 text-sm text-base-content hover:bg-base-200 transition-colors"
+              @click="visitStore"
+            >
+              Visit Store
+            </a>
+            <div class="border-t border-base-300 my-1"></div>
+            <a
+              href="#"
+              class="block px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors"
+              @click="logout"
+            >
+              Logout
+            </a>
           </div>
         </div>
       </div>
@@ -77,19 +118,41 @@
 import { ref } from 'vue'
 
 const searchQuery = ref('')
+const showUserDropdown = ref(false)
 
-// You can add more functionality here like:
-// - Search suggestions
-// - User dropdown menu
-// - Notification handling
-// - etc.
+const toggleUserDropdown = () => {
+  showUserDropdown.value = !showUserDropdown.value
+}
 
-/* const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    console.log('Searching for:', searchQuery.value)
-    // Implement search logic here
+const visitWebsite = () => {
+  // Implement visit website logic
+  console.log('Visiting website...')
+  showUserDropdown.value = false
+}
+
+const visitStore = () => {
+  // Implement visit store logic
+  console.log('Visiting store...')
+  showUserDropdown.value = false
+}
+
+const logout = () => {
+  // Implement logout logic
+  console.log('Logging out...')
+  showUserDropdown.value = false
+}
+
+// Close dropdown when clicking outside
+const handleClickOutside = (event) => {
+  if (!event.target.closest('.relative')) {
+    showUserDropdown.value = false
   }
-} */
+}
+
+// Add click event listener to close dropdown when clicking outside
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', handleClickOutside)
+}
 
 // Handle keyboard shortcut for search focus
 const handleKeydown = (event) => {
@@ -133,5 +196,15 @@ button, .group {
 
 .absolute.bg-error {
   animation: pulse 2s infinite;
+}
+
+/* Dropdown animation */
+[v-show] {
+  transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+}
+
+[v-show="false"] {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
