@@ -36,9 +36,14 @@
             </div>
 
             <div class="mt-7 mb-20">
+              <router-link
+                to="/"
+                class="w-full"
+              >
               <button class="bg-primary w-full py-3 rounded-xl text-primary-content shadow-xl hover:shadow-inner focus:outline-none transition duration-500 ease-in-out transform hover:-translate-x hover:scale-105">
                 Login
               </button>
+            </router-link>
             </div>
 
             <!-- <div class="flex mt-7 items-center text-center">

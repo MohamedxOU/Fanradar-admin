@@ -139,8 +139,8 @@
             <span class="font-medium">{{ fandom.postCount }}</span> posts
           </div>
           <div class="card-actions justify-end mt-4">
-            <button class="btn btn-sm btn-outline">View</button>
-            <button class="btn btn-sm btn-primary">Join</button>
+            <button class="btn btn-sm btn-outline">Modify</button>
+            <button class="btn btn-sm btn-primary">View</button>
           </div>
         </div>
       </div>
