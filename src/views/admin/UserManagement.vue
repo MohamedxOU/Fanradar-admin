@@ -161,44 +161,64 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in filteredUsers" :key="user.id">
-              <td>
-                <div class="flex items-center gap-3">
-                  <div class="avatar">
-                    <div class="w-10 h-10 rounded-full">
-                      <img :src="user.avatar" :alt="user.name" />
-                    </div>
-                  </div>
-                  <div>
-                    <div class="font-bold">{{ user.name }}</div>
-                    <div class="text-sm text-base-content/60">@{{ user.username }}</div>
-                  </div>
-                </div>
-              </td>
-              <td>{{ user.email }}</td>
-              <td>
-                <span class="badge" :class="roleBadgeClass(user.role)">
-                  {{ user.role }}
-                </span>
-              </td>
-              <td>
-                <span class="badge" :class="statusBadgeClass(user.status)">
-                  {{ user.status }}
-                </span>
-              </td>
-              <td>{{ formatDate(user.joinedDate) }}</td>
-              <td>
-                <div class="flex gap-2">
-                  <button @click="editUser(user)" class="btn btn-ghost btn-sm">
-                    <PencilSquareIcon class="h-4 w-4" />
-                  </button>
-                  <button @click="viewUser(user)" class="btn btn-ghost btn-sm">
-                    <EyeIcon class="h-4 w-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
+  <tr v-if="loading">
+    <td colspan="6" class="text-center py-8">
+      <span class="loading loading-spinner loading-lg"></span>
+      <p>Loading users...</p>
+    </td>
+  </tr>
+
+  <tr v-else-if="error">
+    <td colspan="6" class="text-center py-8 text-error">
+      {{ error }}
+      <button @click="fetchUsers" class="btn btn-sm btn-outline mt-2">Retry</button>
+    </td>
+  </tr>
+
+  <tr v-else-if="paginatedUsers.length === 0">
+    <td colspan="6" class="text-center py-8">
+      No users found matching your criteria
+    </td>
+  </tr>
+
+  <tr v-for="user in paginatedUsers" :key="user.id">
+    <td>
+      <div class="flex items-center gap-3">
+        <div class="avatar">
+          <div class="w-10 h-10 rounded-full">
+            <img :src="user.avatar" :alt="user.name" />
+          </div>
+        </div>
+        <div>
+          <div class="font-bold">{{ user.first_name }} {{ user.last_name }}</div>
+          <div class="text-sm text-base-content/60">@{{ user.username }}</div>
+        </div>
+      </div>
+    </td>
+    <td>{{ user.email }}</td>
+    <td>
+      <span class="badge" :class="roleBadgeClass(user.role)">
+        {{ user.role }}
+      </span>
+    </td>
+    <td>
+      <span class="badge" :class="statusBadgeClass(user.status)">
+        {{ user.status }}
+      </span>
+    </td>
+    <td>{{ formatDate(user.joinedDate) }}</td>
+    <td>
+      <div class="flex gap-2">
+        <button @click="editUser(user)" class="btn btn-ghost btn-sm">
+          <PencilSquareIcon class="h-4 w-4" />
+        </button>
+        <button @click="viewUser(user)" class="btn btn-ghost btn-sm">
+          <EyeIcon class="h-4 w-4" />
+        </button>
+      </div>
+    </td>
+  </tr>
+</tbody>
         </table>
 
 
@@ -259,13 +279,19 @@ import {
 import AddUserModal from '../../components/admin/AddUserModal.vue'
 import RoleManagementModal from '../../components/admin/RoleManagementModal.vue'
 import TwoFASettingsModal from '../../components/admin/TwoFASettingsModal.vue'
+import { getUsers } from '@/api/user'
 
 // Stats data
 const stats = ref({
-  totalUsers: 1243,
-  newUsers: 42,
-  activeUsers: 876
+  totalUsers: 0,
+  newUsers: 0,
+  activeUsers: 0
 })
+
+// Users data
+const users = ref([])
+const loading = ref(false)
+const error = ref(null)
 
 // Filter controls
 const showFilters = ref(false)
@@ -295,24 +321,7 @@ const categories = ref([
 
 const roles = ref([
   { value: 'admin', label: 'Admin' },
-  { value: 'moderator', label: 'Moderator' },
-  { value: 'user', label: 'User' },
-  { value: 'guest', label: 'Guest' }
-])
-
-// Sample user data
-const users = ref([
-  {
-    id: 1,
-    name: 'John Doe',
-    username: 'johndoe',
-    email: 'john@example.com',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-    role: 'admin',
-    status: 'active',
-    joinedDate: '2023-01-15'
-  },
-  // More sample users...
+  { value: 'user', label: 'User' }
 ])
 
 // Pagination
@@ -324,25 +333,83 @@ const showAddUserModal = ref(false)
 const showRoleManagementModal = ref(false)
 const show2FASettingsModal = ref(false)
 
+// Fetch users function
+const fetchUsers = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await getUsers()
+    users.value = response.data.map(user => ({
+      id: user.id,
+      name: `${user.first_name} ${user.last_name}`,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      username: user.username || 'N/A',
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      joinedDate: user.join_date,
+      avatar: `/images/avatars/${user.image}`
+    }))
+
+    // Update stats with proper calculations
+    updateUserStats()
+  } catch (err) {
+    error.value = err.message || 'Failed to fetch users'
+    console.error('Error fetching users:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const updateUserStats = () => {
+  const now = new Date()
+
+  // Calculate new users (joined in last 7 days)
+  stats.value.newUsers = users.value.filter(user => {
+    const joinDate = new Date(user.joinedDate)
+    const diffTime = now - joinDate
+    const diffDays = diffTime / (1000 * 60 * 60 * 24)
+    return diffDays <= 7
+  }).length
+
+  // Calculate active users (status === 'active')
+  stats.value.activeUsers = users.value.filter(
+    user => user.status === 'active'
+  ).length
+
+  // Total users
+  stats.value.totalUsers = users.value.length
+}
+
+
+
 // Computed properties
 const filteredUsers = computed(() => {
+  if (!users.value) return []
+
   return users.value.filter(user => {
     // Search filter
     const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchQuery.value.toLowerCase())
+      (user.username && user.username.toLowerCase().includes(searchQuery.value.toLowerCase()))
 
     // Date range filter
     const matchesDateRange = checkDateRange(user.joinedDate)
 
     // Other filters
-    const matchesCategory = !filters.value.category || user.category === filters.value.category
     const matchesRole = !filters.value.role || user.role === filters.value.role
     const matchesStatus = !filters.value.status || user.status === filters.value.status
 
-    return matchesSearch && matchesDateRange && matchesCategory && matchesRole && matchesStatus
+    return matchesSearch && matchesDateRange && matchesRole && matchesStatus
   })
+})
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredUsers.value.slice(start, end)
 })
 
 const totalPages = computed(() => {
@@ -367,12 +434,12 @@ const visiblePages = computed(() => {
 })
 
 // Methods
-const checkDateRange = (date) => {
+const checkDateRange = (dateString) => {
   if (selectedDateRange.value === 'all') return true
 
   const now = new Date()
-  const userDate = new Date(date)
-  const diffTime = now - userDate
+  const date = new Date(dateString)
+  const diffTime = now - date
   const diffDays = diffTime / (1000 * 60 * 60 * 24)
 
   switch (selectedDateRange.value) {
@@ -432,7 +499,13 @@ const closeAddUserModal = () => {
 }
 
 const handleAddUser = (newUser) => {
-  users.value.unshift(newUser)
+  users.value.unshift({
+    ...newUser,
+    id: Math.max(...users.value.map(u => u.id)) + 1,
+    joinedDate: new Date().toISOString().split('T')[0],
+    status: 'active',
+    image: 'default.png'
+  })
   closeAddUserModal()
 }
 
@@ -465,11 +538,9 @@ const viewUser = (user) => {
 
 // Fetch data on mount
 onMounted(() => {
-  // In a real app, you would fetch this data from an API
-  // fetchUsers()
+  fetchUsers()
 })
 </script>
-
 <style scoped>
 .user-management-container {
   max-width: 100%;
