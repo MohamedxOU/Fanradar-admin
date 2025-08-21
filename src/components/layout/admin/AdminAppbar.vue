@@ -95,16 +95,16 @@
           >
             <div class="text-right">
               <p class="text-sm font-medium text-base-content group-hover:text-primary transition-colors">
-                Totok Michael
+                {{ userName }}
               </p>
               <p class="text-xs text-base-content/60">
-                tmichael20@mail.com
+                {{ userEmail }}
               </p>
             </div>
             <div class="relative">
               <img
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format"
-                alt="Totok Michael"
+                :src="userAvatar"
+                :alt="userName"
                 class="w-10 h-10 rounded-full border-2 border-base-300 group-hover:border-primary transition-colors"
               />
               <!-- Online status indicator -->
@@ -142,10 +142,11 @@
             <div class="border-t border-base-300 my-1"></div>
             <a
               href="#"
-              class="block px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors"
+              class="block px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors flex items-center justify-center"
               @click="logout"
             >
-              Logout
+              <span v-if="loadingLogout" class="loading loading-spinner loading-xs mr-2"></span>
+              <span v-else>Logout</span>
             </a>
           </div>
         </div>
@@ -155,11 +156,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const searchQuery = ref('')
 const showUserDropdown = ref(false)
 const showNotificationDropdown = ref(false)
+const loadingLogout = ref(false)
+const router = useRouter()
+const auth = useAuthStore()
+
+const userName = computed(() => auth.user?.first_name + ' ' + auth.user?.last_name || 'User')
+const userEmail = computed(() => auth.user?.email || '')
+const userAvatar = computed(() => auth.user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format')
 
 // Sample notifications data
 const notifications = ref([
@@ -212,9 +222,17 @@ const visitStore = () => {
   showUserDropdown.value = false
 }
 
-const logout = () => {
-  console.log('Logging out...')
-  showUserDropdown.value = false
+const logout = async () => {
+  loadingLogout.value = true
+  try {
+    await auth.logout()
+    showUserDropdown.value = false
+    router.push({ name: 'login' })
+  } catch (e) {
+    console.error('Logout failed', e)
+  } finally {
+    loadingLogout.value = false
+  }
 }
 
 // Close dropdowns when clicking outside

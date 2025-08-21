@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import LoginView from '@/views/auth/LoginView.vue'
 import ForgotPasswordView from '@/views/auth/ForgotPasswordView.vue'
 import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
@@ -44,6 +45,7 @@ const router = createRouter({
       path: '/',
       name: 'dashboard',
       component: AdminDashboardLayout,
+      meta: { requiresAuth: true },
       children: [
         {
           path: '',
@@ -140,3 +142,15 @@ const router = createRouter({
 })
 
 export default router
+
+// Navigation guard for authentication
+router.beforeEach((to, from, next) => {
+  const auth = useAuthStore()
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    next({ name: 'login' })
+  } else if (to.name === 'login' && auth.isAuthenticated) {
+    next({ name: 'dashboard-home' })
+  } else {
+    next()
+  }
+})
