@@ -78,43 +78,37 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getRoles } from '@/api/roles_permessions'
 
 
 const emit = defineEmits(['close'])
 
 const newRoleName = ref('')
 
-const roles = ref([
-  {
-    id: 1,
-    name: 'Administrator',
-    isDefault: true,
-    permissions: ['all'],
-    userCount: 5
-  },
-  {
-    id: 2,
-    name: 'Moderator',
-    isDefault: false,
-    permissions: ['manage_users', 'manage_content', 'view_reports'],
-    userCount: 12
-  },
-  {
-    id: 3,
-    name: 'User',
-    isDefault: true,
-    permissions: ['create_content', 'edit_own_content'],
-    userCount: 1243
-  },
-  {
-    id: 4,
-    name: 'Guest',
-    isDefault: true,
-    permissions: ['view_content'],
-    userCount: 342
+const roles = ref([])
+
+const fetchRoles = async () => {
+  try {
+    const response = await getRoles()
+    // Map API response to table structure
+    roles.value = response.data.map(role => ({
+      id: role.id,
+      name: role.name,
+      isDefault: false, // You can adjust this logic as needed
+      permissions: role.permissions_array || [],
+      userCount: 0 // You may want to fetch user count separately if needed
+    }))
+  } catch (e) {
+    // Handle error (optional)
+    roles.value = []
+    console.error('Failed to fetch roles:', e)
   }
-])
+}
+
+onMounted(() => {
+  fetchRoles()
+})
 
 const close = () => {
   emit('close')
@@ -133,8 +127,6 @@ const addRole = () => {
 
 
 }
-
-
 
 const deleteRole = (role) => {
   if (role.isDefault) return

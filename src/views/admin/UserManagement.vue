@@ -51,8 +51,8 @@
       <div class="card bg-base-100 shadow-md rounded-lg p-6">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-medium text-base-content/60">Active Users (30d)</h3>
-            <p class="text-3xl font-bold mt-2">{{ formatNumber(stats.activeUsers) }}</p>
+            <h3 class="text-sm font-medium text-base-content/60">Regular Users</h3>
+            <p class="text-3xl font-bold mt-2">{{ formatNumber(stats.regularUsers) }}</p>
           </div>
           <div class="p-3 rounded-full bg-info/10">
             <UserGroupIcon class="h-6 w-6 text-info" />
@@ -87,38 +87,12 @@
             <FunnelIcon class="h-5 w-5" />
             <span>Filters</span>
           </button>
-
-          <!-- Date Range Dropdown -->
-          <select
-            v-model="selectedDateRange"
-            class="select select-bordered"
-          >
-            <option value="all">All Time</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
-          </select>
-
-
         </div>
       </div>
 
       <!-- Filters Panel -->
       <div v-if="showFilters" class="bg-base-200 p-4 rounded-lg mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Category Filter -->
-          <div>
-            <label class="label">
-              <span class="label-text">Category</span>
-            </label>
-            <select v-model="filters.category" class="select select-bordered w-full">
-              <option value="">All Categories</option>
-              <option v-for="category in categories" :value="category.value">
-                {{ category.label }}
-              </option>
-            </select>
-          </div>
-
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Role Filter -->
           <div>
             <label class="label">
@@ -132,16 +106,16 @@
             </select>
           </div>
 
-          <!-- Status Filter -->
+          <!-- Date Range Filter -->
           <div>
             <label class="label">
-              <span class="label-text">Status</span>
+              <span class="label-text">Date Range</span>
             </label>
-            <select v-model="filters.status" class="select select-bordered w-full">
-              <option value="">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
+            <select v-model="selectedDateRange" class="select select-bordered w-full">
+              <option value="all">All Time</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
             </select>
           </div>
         </div>
@@ -155,28 +129,27 @@
               <th>User</th>
               <th>Email</th>
               <th>Role</th>
-              <th>Status</th>
               <th>Joined</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
   <tr v-if="loading">
-    <td colspan="6" class="text-center py-8">
+    <td colspan="5" class="text-center py-8">
       <span class="loading loading-spinner loading-lg"></span>
       <p>Loading users...</p>
     </td>
   </tr>
 
   <tr v-else-if="error">
-    <td colspan="6" class="text-center py-8 text-error">
+    <td colspan="5" class="text-center py-8 text-error">
       {{ error }}
       <button @click="fetchUsers" class="btn btn-sm btn-outline mt-2">Retry</button>
     </td>
   </tr>
 
   <tr v-else-if="paginatedUsers.length === 0">
-    <td colspan="6" class="text-center py-8">
+    <td colspan="5" class="text-center py-8">
       No users found matching your criteria
     </td>
   </tr>
@@ -191,7 +164,6 @@
         </div>
         <div>
           <div class="font-bold">{{ user.first_name }} {{ user.last_name }}</div>
-          <div class="text-sm text-base-content/60">@{{ user.username }}</div>
         </div>
       </div>
     </td>
@@ -199,11 +171,6 @@
     <td>
       <span class="badge" :class="roleBadgeClass(user.role)">
         {{ user.role }}
-      </span>
-    </td>
-    <td>
-      <span class="badge" :class="statusBadgeClass(user.status)">
-        {{ user.status }}
       </span>
     </td>
     <td>{{ formatDate(user.joinedDate) }}</td>
@@ -285,7 +252,7 @@ import { getUsers } from '@/api/user'
 const stats = ref({
   totalUsers: 0,
   newUsers: 0,
-  activeUsers: 0
+  regularUsers: 0
 })
 
 // Users data
@@ -307,18 +274,10 @@ const searchQuery = ref('')
 
 // Filters
 const filters = ref({
-  category: '',
-  role: '',
-  status: ''
+  role: ''
 })
 
 // Sample filter options
-const categories = ref([
-  { value: 'regular', label: 'Regular Users' },
-  { value: 'premium', label: 'Premium Users' },
-  { value: 'admin', label: 'Administrators' }
-])
-
 const roles = ref([
   { value: 'admin', label: 'Admin' },
   { value: 'user', label: 'User' }
@@ -344,12 +303,10 @@ const fetchUsers = async () => {
       name: `${user.first_name} ${user.last_name}`,
       first_name: user.first_name,
       last_name: user.last_name,
-      username: user.username || 'N/A',
       email: user.email,
       role: user.role,
-      status: user.status,
       joinedDate: user.join_date,
-      avatar: `/images/avatars/${user.image}`
+      avatar: user.image ? `${import.meta.env.VITE_STORAGE_URL}/public/${user.image}` : ''
     }))
 
     // Update stats with proper calculations
@@ -373,9 +330,9 @@ const updateUserStats = () => {
     return diffDays <= 7
   }).length
 
-  // Calculate active users (status === 'active')
-  stats.value.activeUsers = users.value.filter(
-    user => user.status === 'active'
+  // Calculate regular users (role === 'user')
+  stats.value.regularUsers = users.value.filter(
+    user => user.role === 'user'
   ).length
 
   // Total users
@@ -392,17 +349,15 @@ const filteredUsers = computed(() => {
     // Search filter
     const matchesSearch =
       user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      (user.username && user.username.toLowerCase().includes(searchQuery.value.toLowerCase()))
+      user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
 
     // Date range filter
     const matchesDateRange = checkDateRange(user.joinedDate)
 
     // Other filters
     const matchesRole = !filters.value.role || user.role === filters.value.role
-    const matchesStatus = !filters.value.status || user.status === filters.value.status
 
-    return matchesSearch && matchesDateRange && matchesRole && matchesStatus
+    return matchesSearch && matchesDateRange && matchesRole
   })
 })
 
@@ -463,15 +418,6 @@ const roleBadgeClass = (role) => {
     case 'admin': return 'badge-primary'
     case 'moderator': return 'badge-secondary'
     case 'user': return 'badge-accent'
-    default: return 'badge-ghost'
-  }
-}
-
-const statusBadgeClass = (status) => {
-  switch (status) {
-    case 'active': return 'badge-success'
-    case 'inactive': return 'badge-warning'
-    case 'suspended': return 'badge-error'
     default: return 'badge-ghost'
   }
 }
