@@ -4,11 +4,13 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Products Management</h1>
-      <button class="btn btn-primary">
+
+      <button class="btn btn-primary" @click="openAddProductModal">
         <PlusIcon class="h-5 w-5" />
         Add Product
       </button>
     </div>
+
 
     <!-- Tabs -->
     <div class="tabs tabs-boxed bg-base-200 p-1 mb-6">
@@ -91,18 +93,26 @@
           :key="product.id"
           class="card bg-base-100 shadow hover:shadow-lg transition-shadow"
         >
-          <figure class="px-4 pt-4">
+          <figure class="px-4 pt-4 relative">
             <img
               :src="product.medias && product.medias.length > 0 ? product.medias[0].url : '/public/images/test_logo.png'"
               :alt="product.product_name"
               class="rounded-xl h-48 w-full object-cover"
             />
+            <!-- Drop badge and countdown -->
+            <template v-if="product.sale_end_date">
+              <div class="absolute top-2 right-2 badge badge-error gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                {{ formatCountdown(product.sale_end_date) }}
+              </div>
+              <div class="absolute top-2 left-2 badge badge-info">Drop</div>
+            </template>
           </figure>
           <div class="card-body p-4">
             <div class="flex justify-between items-start">
               <h2 class="card-title">{{ product.product_name }}</h2>
               <span class="badge" :class="typeBadgeClass(product.type)">
-                {{ product.type || 'N/A' }}
+                {{ product.type || (product.sale_end_date ? 'Drop' : 'N/A') }}
               </span>
             </div>
             <p class="text-lg font-bold mt-2">${{ Number(product.price).toFixed(2) }}</p>
@@ -113,7 +123,23 @@
               <span class="text-sm">${{ product.revenue ? Number(product.revenue).toLocaleString() : '0' }}</span>
             </div>
             <div class="text-xs text-gray-500 mt-2">
-              Added {{ formatDate(product.created_at) }}
+              <template v-if="product.sale_end_date">
+                Drop ends: {{ formatDate(product.sale_end_date) }}
+              </template>
+              <template v-else>
+                Added {{ formatDate(product.created_at) }}
+              </template>
+            </div>
+            <div v-if="product.sale_end_date" class="mt-2">
+              <div class="flex justify-between text-xs mb-1">
+                <span>Stock: {{ product.stock }}</span>
+                <span>Revenue: ${{ product.revenue ? Number(product.revenue).toLocaleString() : '0' }}</span>
+              </div>
+              <progress
+                class="progress progress-primary w-full"
+                :value="product.revenue || 0"
+                :max="product.stock * Number(product.price)"
+              ></progress>
             </div>
             <div class="card-actions justify-end mt-4">
               <button class="btn btn-sm btn-outline">Edit</button>
@@ -169,7 +195,14 @@
                 </span>
               </td>
               <td>${{ product.revenue ? Number(product.revenue).toLocaleString() : '0' }}</td>
-              <td>{{ formatDate(product.created_at) }}</td>
+              <td>
+                <template v-if="product.sale_end_date">
+                  {{ formatDate(product.sale_end_date) }}
+                </template>
+                <template v-else>
+                  {{ formatDate(product.created_at) }}
+                </template>
+              </td>
               <td>
                 <div class="flex gap-2">
                   <button class="btn btn-ghost btn-xs">
@@ -207,11 +240,15 @@
         </button>
       </div>
     </div>
+
+    <!-- Modal Component -->
+    <AddProductModal ref="addProductModalRef" @product-added="fetchProducts" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import AddProductModal from '@/components/admin/AddProductModal.vue'
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -220,12 +257,24 @@ import {
   PencilSquareIcon,
   EyeIcon
 } from '@heroicons/vue/24/outline'
+import { getProducts } from '@/api/product'
+
+// Template ref for the modal
+const addProductModalRef = ref(null)
+
+// Function to open the modal
+const openAddProductModal = () => {
+  if (addProductModalRef.value) {
+    addProductModalRef.value.openModal()
+  }
+}
 
 // Tabs
 const tabs = [
   { label: 'All', value: 'all' },
   { label: 'Items', value: 'item' },
-  { label: 'Services', value: 'service' }
+  { label: 'Services', value: 'service' },
+  { label: 'Drops', value: 'drops' }
 ]
 const activeTab = ref('all')
 
@@ -249,9 +298,6 @@ const dateFilters = [
   { value: 'month', label: 'This Month' },
   { value: 'year', label: 'This Year' }
 ]
-
-import { onMounted } from 'vue'
-import { getProducts } from '@/api/product'
 
 const products = ref([])
 const loading = ref(false)
@@ -287,8 +333,15 @@ onMounted(() => {
 // Filtered products (search, tab, category, date)
 const filteredProducts = computed(() => {
   return products.value.filter(product => {
-    // Tab filter
-    const matchesTab = activeTab.value === 'all' || product.type === activeTab.value
+    // Drops filter
+    if (activeTab.value === 'drops' && !product.sale_end_date) return false
+    if (activeTab.value !== 'drops' && activeTab.value !== 'all' && product.sale_end_date) return false
+
+    // Tab filter (for item/service)
+    const matchesTab =
+      activeTab.value === 'all' ||
+      activeTab.value === 'drops' ||
+      product.type === activeTab.value
 
     // Search filter
     const matchesSearch = product.product_name.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -353,6 +406,17 @@ const statusBadgeClass = (status) => {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   return new Date(dateString).toLocaleDateString()
+}
+
+// Drop countdown helper
+const formatCountdown = (dateString) => {
+  const now = new Date()
+  const end = new Date(dateString)
+  const diff = end - now
+  if (diff <= 0) return 'Ended'
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  return `${days}d ${hours}h`
 }
 </script>
 

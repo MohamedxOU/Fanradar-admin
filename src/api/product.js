@@ -1,9 +1,10 @@
 import apiClient from "./config";
 
 //get all products
-export const getProducts = async () => {
+export const getProducts = async (page = 1) => {
   try {
     const response = await apiClient.get("/products", {
+      params: { page }
     });
     return response.data;
   }
@@ -24,13 +25,14 @@ export const getProductById = async (id) => {
   }
 }
 
+
+
 //create product
-export const createProduct = async (productData, token) => {
+export const createProduct = async (productData
+) => {
   try {
     const response = await apiClient.post("/products", productData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+
     });
     return response.data;
   } catch (error) {

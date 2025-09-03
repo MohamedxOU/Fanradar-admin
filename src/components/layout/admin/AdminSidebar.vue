@@ -156,7 +156,6 @@ import {
   CalendarDaysIcon as ScheduledPostsIcon,
   PencilSquareIcon as AddPostIcon,
   ShoppingBagIcon as ShopIcon,
-  ReceiptPercentIcon as DropsIcon,
   ShoppingCartIcon as ShopCartIcon,
   ClipboardDocumentIcon as FansContentIcon,
   PresentationChartLineIcon as FandomTrackerIcon,
@@ -250,7 +249,6 @@ const cmsItems = [
 
 const shopDropItems = [
   { route: '/products', label: 'All products', icon: ShopIcon },
-  { route: '/drops', label: 'Drops', icon: DropsIcon },
   { route: '/orders', label: 'Orders', icon: ShopCartIcon }
 ]
 

@@ -12,7 +12,6 @@ import PendingPosts from '@/views/admin/PendingPosts.vue'
 import ScheduledPosts from '@/views/admin/ScheduledPosts.vue'
 import AddPost from '@/views/admin/AddPost.vue'
 import ProductsView from '@/views/admin/ProductsView.vue'
-import DropsPage from '@/views/admin/DropsPage.vue'
 import OrdersPage from '@/views/admin/OrdersPage.vue'
 import RadarTracker from '@/views/admin/RadarTracker.vue'
 import AnalyticsView from '@/views/admin/AnalyticsView.vue'
@@ -98,11 +97,7 @@ const router = createRouter({
           component: ProductsView,
         },
 
-        {
-          path: 'drops',
-          name: 'drops',
-          component: DropsPage,
-        },
+
 
         {
           path: 'orders',
