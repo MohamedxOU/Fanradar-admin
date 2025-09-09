@@ -245,31 +245,44 @@ const fetchCategoriesAndSubcategories = async () => {
 // Fandoms cache to avoid duplicate requests
 const fandomsCache = ref({})
 const fandomsList = ref([])
-
 const fetchFandomForPost = async (fandomId) => {
   if (!fandomId) return null
   if (fandomsCache.value[fandomId]) return fandomsCache.value[fandomId]
   try {
-    // You may need to get the token from your auth store if required
-    const token = '' // TODO: Replace with actual token if needed
-    const fandom = await getFandomById(fandomId, token)
-    fandomsCache.value[fandomId] = fandom
-    // Add to fandomsList if not already present
-    if (fandom && !fandomsList.value.some(f => f.id === fandom.id)) {
-      fandomsList.value.push(fandom)
+
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+
+    const response = await getFandomById(fandomId, token)
+
+    console.log('Fandom API response:', response)
+    console.log('Response data structure:', response?.data)
+
+    // The response structure is: response.data.fandom
+    const fandom = response?.data?.fandom
+
+    if (fandom && fandom.name) {
+      console.log('Found fandom:', fandom.name)
+      fandomsCache.value[fandomId] = fandom
+      if (!fandomsList.value.some(f => f.id === fandom.id)) {
+        fandomsList.value.push(fandom)
+      }
+      return fandom
+    } else {
+      console.log('Fandom not found in response, using fallback')
+      fandomsCache.value[fandomId] = { id: fandomId, name: 'Unknown' }
+      return fandomsCache.value[fandomId]
     }
-    return fandom
-  } catch {
-    return null
+  } catch (error) {
+    console.error('Error fetching fandom:', error)
+    fandomsCache.value[fandomId] = { id: fandomId, name: 'Unknown' }
+    return fandomsCache.value[fandomId]
   }
 }
-
 const fetchFandoms = async () => {
   try {
-    // You may need to get the token from your auth store if required
     const token = localStorage.getItem('token') || sessionStorage.getItem('token') || ''
-    const fandoms = await getFandoms(token)
-    fandomsList.value = fandoms
+    const response = await getFandoms(token)
+    fandomsList.value = response?.data?.fandoms || []
   } catch {
     fandomsList.value = []
   }
@@ -319,8 +332,12 @@ const fetchPosts = async () => {
       }
       // Get fandom details from cache
       let fandomName = ''
-      if (post.fandom_id && fandomsCache.value[post.fandom_id]) {
+      if (!post.fandom_id) {
+        fandomName = 'General'
+      } else if (fandomsCache.value[post.fandom_id] && fandomsCache.value[post.fandom_id].name) {
         fandomName = fandomsCache.value[post.fandom_id].name
+      } else {
+        fandomName = 'Unknown'
       }
       return {
         id: post.id,
