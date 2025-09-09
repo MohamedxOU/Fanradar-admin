@@ -18,6 +18,7 @@ import AnalyticsView from '@/views/admin/AnalyticsView.vue'
 import FooterLegalManagement from '@/views/admin/FooterLegalManagement.vue'
 import SettingsView from '@/views/admin/SettingsView.vue'
 import FansContent from '@/views/admin/FansContent.vue'
+import CategorySubCatView from '@/views/admin/CategorySubCatView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -127,6 +128,11 @@ const router = createRouter({
           path: 'settings',
           name: 'settings',
           component: SettingsView,
+        },
+        {
+          path: 'categories-subcategories',
+          name: 'categories-subcategories',
+          component: CategorySubCatView,
         }
 
       ]

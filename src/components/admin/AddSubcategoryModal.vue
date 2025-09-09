@@ -8,21 +8,7 @@
       </div>
 
       <div class="space-y-4">
-        <!-- Category -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Parent Category</span>
-          </label>
-          <select
-            v-model="newSubcategory.categoryId"
-            class="select select-bordered w-full"
-          >
-            <option disabled selected>Select a category</option>
-            <option v-for="category in categories" :value="category.id">
-              {{ category.name }}
-            </option>
-          </select>
-        </div>
+
 
         <!-- Subcategory Name -->
         <div class="form-control">
@@ -43,7 +29,7 @@
         <button
           @click="save"
           class="btn btn-primary"
-          :disabled="!newSubcategory.name.trim() || !newSubcategory.categoryId"
+          :disabled="!newSubcategory.name.trim() || (!props.categoryId && !newSubcategory.categoryId)"
         >
           Add Subcategory
         </button>
@@ -53,15 +39,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
-
-
+const props = defineProps({
+  categoryId: {
+    type: [String, Number],
+    default: null
+  },
+  categories: {
+    type: Array,
+    default: () => []
+  }
+})
 const emit = defineEmits(['close', 'save'])
 
 const newSubcategory = ref({
-  categoryId: '',
+  categoryId: props.categoryId || '',
   name: ''
+})
+
+// If categoryId prop changes, update the form
+watch(() => props.categoryId, (val) => {
+  newSubcategory.value.categoryId = val || ''
 })
 
 const close = () => {
@@ -70,11 +69,10 @@ const close = () => {
 
 const save = () => {
   emit('save', {
-    categoryId: newSubcategory.value.categoryId,
     name: newSubcategory.value.name.trim()
   })
   newSubcategory.value = {
-    categoryId: '',
+    categoryId: props.categoryId || '',
     name: ''
   }
   close()

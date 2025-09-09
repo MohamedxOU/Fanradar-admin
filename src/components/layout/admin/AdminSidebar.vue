@@ -164,7 +164,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   BarsArrowDownIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+TagIcon
 } from '@heroicons/vue/24/outline'
 import HomeIcon from '@/icons/HomeIcon.vue'
 
@@ -233,7 +234,9 @@ const generalItems = [
   { route: '/', label: 'Dashboard', icon: HomeIcon, exact: true },
   { route: '/users', label: 'Users', icon: UsersIcon },
   { route: '/fandoms', label: 'Fandoms', icon: UserGroupIcon },
-  {route : '/radar-tracker', label: 'Radar tracker', icon: FandomTrackerIcon, exact: true},
+  { route: '/categories-subcategories', label: 'Category and subcategory', icon: TagIcon },
+  {route : '/radar-tracker', label: 'Radar tracker', icon: FandomTrackerIcon, exact: true}
+
 
 
 ]
