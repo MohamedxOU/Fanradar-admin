@@ -183,11 +183,11 @@ async function handleSubmit() {
 		data.append('user_id', form.user_id)
 		if (form.sale_start_date) data.append('sale_start_date', form.sale_start_date)
 		if (form.sale_end_date) data.append('sale_end_date', form.sale_end_date),
-        data.append('content_status', form.content_status)
+    data.append('content_status', form.content_status.toLocaleLowerCase)
 		for (let i = 0; i < form.medias.length; i++) {
 			data.append('medias[]', form.medias[i])
 		}
-		await createProduct(data)
+		await createProduct(data, sessionStorage.getItem('token') || localStorage.getItem('token'))
 		success.value = true
 		setTimeout(() => {
 			closeModal()

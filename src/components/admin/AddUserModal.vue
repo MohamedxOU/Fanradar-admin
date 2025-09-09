@@ -108,7 +108,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { register } from '@/api/auth'
+import { createUser } from '@/api/user'
 import { getRoles } from '@/api/roles_permessions'
 
 const emit = defineEmits(['close', 'save'])
@@ -194,17 +194,26 @@ const save = async () => {
     if (newUser.value.profile_image) {
       formData.append('profile_image', newUser.value.profile_image)
     }
-    await register(formData)
-    successMessage.value = 'User registered successfully.'
-    emit('save', { ...newUser.value })
-    setTimeout(() => {
-      close()
-    }, 1200)
+    formData.append('role', newUser.value.role)
+    console.log('Submitting user:', Object.fromEntries(formData.entries()))
+    const response = await createUser(formData)
+    console.log('API response:', response)
+    if (response && (response.success || response.data)) {
+      successMessage.value = 'User registered successfully.'
+      emit('save', response.data || { ...newUser.value })
+      setTimeout(() => {
+        close()
+      }, 1200)
+    } else {
+      errorMessage.value = (response && response.message) || 'Failed to register user.'
+      console.error('API error response:', response)
+    }
   } catch (e) {
     errorMessage.value = e?.message || 'Failed to register user.'
     console.error('Failed to register user', e)
   } finally {
     loading.value = false
+    console.log('Loading set to false')
   }
 }
 </script>

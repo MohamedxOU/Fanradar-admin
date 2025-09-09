@@ -182,6 +182,11 @@
         <button @click="viewUser(user)" class="btn btn-ghost btn-sm">
           <EyeIcon class="h-4 w-4" />
         </button>
+        <button v-if="user.id !== currentUserId" @click="confirmDeleteUser(user)" class="btn btn-ghost btn-sm text-error">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </td>
   </tr>
@@ -215,6 +220,61 @@
       @save="handleAddUser"
     />
 
+    <!-- Edit User Modal (role/image only) -->
+    <div v-if="showEditUserModal" class="modal modal-open">
+      <div class="modal-box max-w-md">
+        <h3 class="font-bold text-lg mb-4">Edit User</h3>
+        <div class="form-control mb-4">
+          <label class="label">Role</label>
+          <select v-model="userToEdit.role" class="select select-bordered w-full">
+            <option v-for="role in roles" :value="role.value">{{ role.label }}</option>
+          </select>
+        </div>
+        <div class="form-control mb-4">
+          <label class="label">Profile Image</label>
+          <input type="file" accept="image/*" @change="e => onEditImageChange(e)" class="file-input file-input-bordered w-full" />
+          <div v-if="userToEdit.avatar" class="mt-2"><img :src="userToEdit.avatar" alt="avatar" class="w-16 h-16 rounded-full" /></div>
+        </div>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="closeEditUserModal">Cancel</button>
+          <button class="btn btn-primary" @click="saveEditUser(userToEdit)">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- View User Modal -->
+    <div v-if="showViewUserModal" class="modal modal-open">
+      <div class="modal-box max-w-md">
+        <h3 class="font-bold text-lg mb-4">User Details</h3>
+        <div class="flex flex-col items-center mb-4">
+          <img :src="userToView.avatar" alt="avatar" class="w-20 h-20 rounded-full mb-2" />
+          <div class="font-bold text-xl">{{ userToView.name }}</div>
+          <div class="text-base-content/60">{{ userToView.email }}</div>
+        </div>
+        <div class="mb-2"><b>Role:</b> {{ userToView.role }}</div>
+        <div class="mb-2"><b>Joined:</b> {{ formatDate(userToView.joinedDate) }}</div>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="closeViewUserModal">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div v-if="showDeleteUserModal" class="modal modal-open">
+      <div class="modal-box max-w-md">
+        <h3 class="font-bold text-lg mb-4 text-error">Delete User</h3>
+        <p>Are you sure you want to delete <b>{{ userToDelete?.name }}</b>? This action cannot be undone.</p>
+        <div v-if="deleteError" class="alert alert-error mt-2">{{ deleteError }}</div>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="closeDeleteUserModal">Cancel</button>
+          <button class="btn btn-error" :disabled="deleteLoading" @click="deleteUserConfirmed">
+            <span v-if="deleteLoading" class="loading loading-spinner loading-xs mr-2"></span>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Role Management Modal -->
     <RoleManagementModal
       v-if="showRoleManagementModal"
@@ -246,7 +306,8 @@ import {
 import AddUserModal from '../../components/admin/AddUserModal.vue'
 import RoleManagementModal from '../../components/admin/RoleManagementModal.vue'
 import TwoFASettingsModal from '../../components/admin/TwoFASettingsModal.vue'
-import { getUsers } from '@/api/user'
+import { getUsers, deleteUser, updateUser } from '@/api/user'
+import { useAuthStore } from '@/stores/auth'
 
 // Stats data
 const stats = ref({
@@ -291,6 +352,18 @@ const itemsPerPage = 10
 const showAddUserModal = ref(false)
 const showRoleManagementModal = ref(false)
 const show2FASettingsModal = ref(false)
+const showEditUserModal = ref(false)
+const showViewUserModal = ref(false)
+const showDeleteUserModal = ref(false)
+const userToEdit = ref(null)
+const userToView = ref(null)
+const userToDelete = ref(null)
+const deleteLoading = ref(false)
+const deleteError = ref('')
+
+// Get current user id from auth store
+const authStore = useAuthStore()
+const currentUserId = computed(() => authStore.user?.id)
 
 // Fetch users function
 const fetchUsers = async () => {
@@ -300,13 +373,17 @@ const fetchUsers = async () => {
     const response = await getUsers()
     users.value = response.data.map(user => ({
       id: user.id,
-      name: `${user.first_name} ${user.last_name}`,
+      name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
       role: user.role,
-      joinedDate: user.join_date,
-      avatar: user.image ? `${import.meta.env.VITE_STORAGE_URL}/public/${user.image}` : ''
+      joinedDate: user.created_at || user.joinedDate || '',
+      avatar: user.image
+        ? `${import.meta.env.VITE_STORAGE_URL}/public/${user.image}`
+        : user.profile_image
+          ? `${import.meta.env.VITE_STORAGE_URL}/public/${user.profile_image}`
+          : '',
     }))
 
     // Update stats with proper calculations
@@ -346,13 +423,15 @@ const filteredUsers = computed(() => {
   if (!users.value) return []
 
   return users.value.filter(user => {
-    // Search filter
+    // Defensive: fallback to empty string if property is missing
+    const name = (user.name || `${user.first_name || ''} ${user.last_name || ''}`).trim()
+    const email = user.email || ''
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+      name.toLowerCase().includes((searchQuery.value || '').toLowerCase()) ||
+      email.toLowerCase().includes((searchQuery.value || '').toLowerCase())
 
     // Date range filter
-    const matchesDateRange = checkDateRange(user.joinedDate)
+    const matchesDateRange = checkDateRange(user.joinedDate || user.created_at || '')
 
     // Other filters
     const matchesRole = !filters.value.role || user.role === filters.value.role
@@ -471,15 +550,93 @@ const close2FASettingsModal = () => {
   show2FASettingsModal.value = false
 }
 
-// User actions
 const editUser = (user) => {
-  console.log('Edit user:', user)
-  // Implement edit functionality
+  userToEdit.value = { ...user }
+  showEditUserModal.value = true
+}
+
+const closeEditUserModal = () => {
+  showEditUserModal.value = false
+  userToEdit.value = null
+}
+
+const saveEditUser = async (updatedUser) => {
+  try {
+    // Prepare form data for update (role and avatar)
+    const formData = new FormData()
+    formData.append('role', updatedUser.role)
+    // If avatar is a new file, you would append it here
+    // For demo, we only update role
+    const token = authStore.token
+    await updateUser(updatedUser.id, formData, token)
+    // Update local list
+    const idx = users.value.findIndex(u => u.id === updatedUser.id)
+    if (idx !== -1) {
+      users.value[idx].role = updatedUser.role
+      users.value[idx].avatar = updatedUser.avatar
+    }
+    closeEditUserModal()
+  } catch (e) {
+    // Optionally show error
+    console.error('Failed to update user', e)
+  }
 }
 
 const viewUser = (user) => {
-  console.log('View user:', user)
-  // Implement view functionality
+  userToView.value = { ...user }
+  showViewUserModal.value = true
+}
+
+const closeViewUserModal = () => {
+  showViewUserModal.value = false
+  userToView.value = null
+}
+
+const confirmDeleteUser = (user) => {
+  userToDelete.value = user
+  showDeleteUserModal.value = true
+  deleteError.value = ''
+}
+
+const closeDeleteUserModal = () => {
+  showDeleteUserModal.value = false
+  userToDelete.value = null
+  deleteError.value = ''
+}
+
+const deleteUserConfirmed = async () => {
+  if (!userToDelete.value) return
+  deleteLoading.value = true
+  deleteError.value = ''
+  try {
+    const token = authStore.token
+    await deleteUser(userToDelete.value.id, token)
+    users.value = users.value.filter(u => u.id !== userToDelete.value.id)
+    closeDeleteUserModal()
+  } catch (e) {
+    deleteError.value = e?.message || 'Failed to delete user.'
+  } finally {
+    deleteLoading.value = false
+
+    // Update stats after deletion
+    updateUserStats()
+  }
+
+
+}
+
+// Handle image change in edit modal
+const onEditImageChange = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg']
+    if (!validTypes.includes(file.type)) {
+      // Optionally show error
+      return
+    }
+    // For demo, use local URL. In real app, upload to server and get URL.
+    userToEdit.value.avatar = URL.createObjectURL(file)
+  }
 }
 
 // Fetch data on mount

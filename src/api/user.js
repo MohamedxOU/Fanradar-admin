@@ -43,10 +43,8 @@ export const updateUser = async (id, userData, token) => {
 //delete user
 export const deleteUser = async (id, token) => {
   try {
-    const response = await apiClient.delete(`/users/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await apiClient.delete(`admin/users/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
   } catch (error) {
@@ -56,3 +54,13 @@ export const deleteUser = async (id, token) => {
 
 //create user
 
+export const createUser = async (userData) => {
+  try {
+    const response = await apiClient.post("/users", userData, {
+
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
+  }
+}

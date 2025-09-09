@@ -142,7 +142,7 @@
               ></progress>
             </div>
             <div class="card-actions justify-end mt-4">
-              <button class="btn btn-sm btn-outline">Edit</button>
+              <button class="btn btn-sm btn-outline" @click="openEditProductModal(product)">Edit</button>
               <button class="btn btn-sm btn-primary">View</button>
             </div>
           </div>
@@ -205,7 +205,7 @@
               </td>
               <td>
                 <div class="flex gap-2">
-                  <button class="btn btn-ghost btn-xs">
+                  <button class="btn btn-ghost btn-xs" @click="openEditProductModal(product)">
                     <PencilSquareIcon class="h-4 w-4" />
                   </button>
                   <button class="btn btn-ghost btn-xs">
@@ -243,12 +243,22 @@
 
     <!-- Modal Component -->
     <AddProductModal ref="addProductModalRef" @product-added="fetchProducts" />
+
+    <!-- Update Product Modal -->
+    <UpdateProductModal
+      v-if="showEditProductModal"
+      ref="editProductModalRef"
+      :product="productToEdit"
+      @close="closeEditProductModal"
+      @updated="onProductUpdated"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AddProductModal from '@/components/admin/AddProductModal.vue'
+import UpdateProductModal from '@/components/admin/UpdateProductModal.vue'
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -313,7 +323,7 @@ const fetchProducts = async (page = 1) => {
   loading.value = true
   error.value = null
   try {
-    const res = await getProducts(page)
+    const res = await getProducts(page, sessionStorage.getItem('token') || localStorage.getItem('token'))
     products.value = res.data
     currentPage.value = res.current_page
     totalPages.value = res.last_page
@@ -418,6 +428,30 @@ const formatCountdown = (dateString) => {
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   return `${days}d ${hours}h`
 }
+
+// Edit product modal
+const showEditProductModal = ref(false)
+const productToEdit = ref(null)
+
+const openEditProductModal = (product) => {
+  productToEdit.value = { ...product }
+  showEditProductModal.value = true
+  // Wait for modal to mount, then call openModal
+  setTimeout(() => {
+    if (editProductModalRef.value) {
+      editProductModalRef.value.openModal()
+    }
+  }, 0)
+}
+const closeEditProductModal = () => {
+  showEditProductModal.value = false
+  productToEdit.value = null
+}
+const onProductUpdated = () => {
+  closeEditProductModal()
+  fetchProducts(currentPage.value)
+}
+const editProductModalRef = ref(null)
 </script>
 
 <style scoped>
