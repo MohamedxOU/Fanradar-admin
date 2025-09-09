@@ -142,7 +142,7 @@
             <div class="border-t border-base-300 my-1"></div>
             <a
               href="#"
-              class="block px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors flex items-center justify-center"
+              class=" px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors flex items-center justify-center"
               @click="logout"
             >
               <span v-if="loadingLogout" class="loading loading-spinner loading-xs mr-2"></span>
