@@ -12,20 +12,7 @@
             </svg>
             <span>Add Fandom</span>
           </button>
-          <button @click="openAddCategoryModal" class="btn btn-outline">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span>Add Category</span>
-          </button>
-          <button @click="openAddSubcategoryModal" class="btn btn-outline">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span>Add Subcategory</span>
-          </button>
+
       </div>
 
       <!-- Rest of your content goes here -->
@@ -107,19 +94,14 @@
             {{ category.name }}
           </option>
         </select>
-
-        <!-- Subcategory Filter -->
-        <select v-model="selectedSubcategory" class="select select-bordered" :disabled="!selectedCategory">
-          <option value="">All Subcategories</option>
-          <option v-for="subcategory in filteredSubcategories" :value="subcategory.id">
-            {{ subcategory.name }}
-          </option>
-        </select>
       </div>
     </div>
 
     <!-- Fandoms Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+    <div v-if="loading" class="flex justify-center items-center h-32">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
       <div v-for="fandom in filteredFandoms" :key="fandom.id"
         class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
         <figure class="px-4 pt-4">
@@ -128,8 +110,7 @@
         <div class="card-body p-4">
           <h2 class="card-title">{{ fandom.name }}</h2>
           <div class="flex flex-wrap gap-2 mb-2">
-            <span class="badge badge-outline">{{ fandom.category }}</span>
-            <span class="badge badge-outline" v-if="fandom.subcategory">{{ fandom.subcategory }}</span>
+            <span class="badge badge-outline">{{ fandom.subcategory }}</span>
           </div>
           <div class="flex justify-between text-sm text-base-content/60">
             <span>{{ fandom.memberCount }} members</span>
@@ -152,20 +133,16 @@
     <AddFandomModal v-if="showAddFandomModal" :categories="categories" @close="closeAddFandomModal"
       @save="handleAddFandom" />
 
-    <!-- Add Category Modal -->
-    <AddCategoryModal v-if="showAddCategoryModal" @close="closeAddCategoryModal" @save="handleAddCategory" />
 
-    <!-- Add Subcategory Modal -->
-    <AddSubcategoryModal v-if="showAddSubcategoryModal" :categories="categories" @close="closeAddSubcategoryModal"
-      @save="handleAddSubcategory" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AddFandomModal from '../../components/admin/AddFandomModal.vue'
-import AddCategoryModal from '../../components/admin/AddCategoryModal.vue'
-import AddSubcategoryModal from '../../components/admin/AddSubcategoryModal.vue'
+import { getFandoms } from '@/api/fandoms'
+import { getCategories, getSubCategories } from '@/api/categoryAndSubCat'
+import { useAuthStore } from '@/stores/auth'
 
 // Stats data
 const stats = ref({
@@ -179,61 +156,80 @@ const searchQuery = ref('')
 const selectedCategory = ref('')
 const selectedSubcategory = ref('')
 
-// Sample categories and subcategories data
-const categories = ref([
-  { id: 1, name: 'Movies' },
-  { id: 2, name: 'TV Shows' },
-  { id: 3, name: 'Books' },
-  { id: 4, name: 'Games' }
-])
+const categories = ref([])
+const subcategories = ref([])
 
-const subcategories = ref([
-  { id: 1, categoryId: 1, name: 'Action' },
-  { id: 2, categoryId: 1, name: 'Comedy' },
-  { id: 3, categoryId: 1, name: 'Sci-Fi' },
-  { id: 4, categoryId: 2, name: 'Drama' },
-  { id: 5, categoryId: 2, name: 'Fantasy' },
-  { id: 6, categoryId: 3, name: 'Fiction' },
-  { id: 7, categoryId: 3, name: 'Non-Fiction' },
-  { id: 8, categoryId: 4, name: 'RPG' }
-])
+// Fetch categories and subcategories, grouping subcategories by category as in CategorySubCatView
+const fetchCategoriesAndSubcategories = async () => {
+  try {
+    const [catRes, subRes] = await Promise.all([
+      getCategories(),
+      getSubCategories()
+    ])
+    const cats = Array.isArray(catRes) ? catRes : []
+    const subs = Array.isArray(subRes) ? subRes : []
+    // Attach subcategories to their parent category
+    const catMap = cats.map(cat => ({ ...cat, subcategories: [] }))
+    subs.forEach(sub => {
+      const cat = catMap.find(c => c.id === sub.category_id)
+      if (cat) {
+        cat.subcategories.push(sub)
+      }
+    })
+    categories.value = catMap
+    subcategories.value = subs
+  } catch (e) {
+    console.error('Failed to fetch categories or subcategories', e)
+    categories.value = []
+    subcategories.value = []
+  }
+}
 
-// Sample fandoms data
-const fandoms = ref([
-  {
-    id: 1,
-    name: 'Marvel Cinematic Universe',
-    image: 'https://lumiere-a.akamaihd.net/v1/images/au_portrait_grid_marvel_logo_2025_mobile_1ad65200.png',
-    category: 'Movies',
-    subcategory: 'Action',
-    memberCount: 12500,
-    postCount: 3421,
-    createdAt: '2020-05-15'
-  },
-  // More sample fandoms...
-])
+// Fandoms data
+const fandoms = ref([])
+const loading = ref(false)
+const auth = useAuthStore()
 
-// Filtered subcategories based on selected category
-const filteredSubcategories = computed(() => {
-  if (!selectedCategory.value) return []
-  return subcategories.value.filter(sub => sub.categoryId == selectedCategory.value)
-})
+// Fetch fandoms from API
+const fetchFandoms = async () => {
+  loading.value = true
+  try {
+    const res = await getFandoms(auth.token)
+    // API: { success, data: { fandoms: [...] } }
+    fandoms.value = (res?.data?.fandoms || []).map(f => ({
+      id: f.id,
+      name: f.name,
+      description: f.description,
+      image: f.logo_image || f.cover_image || '',
+      subcategory: f.subcategory?.name || '',
+      memberCount: f.members_count,
+      postCount: f.posts_count,
+      createdAt: f.created_at
+    }))
+  } catch (e) {
+    console.error(e)
+    fandoms.value = []
+    // Optionally show error
+  } finally {
+    loading.value = false
+  }
+}
+
 
 // Filtered fandoms based on search and filters
 const filteredFandoms = computed(() => {
   return fandoms.value.filter(fandom => {
-    // Search filter
-    const matchesSearch = fandom.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+          // Search filter
+          const matchesSearch = fandom.name.toLowerCase().includes(searchQuery.value.toLowerCase())
 
-    // Category filter
-    const matchesCategory = !selectedCategory.value ||
-      fandom.category.toLowerCase() === categories.value.find(c => c.id == selectedCategory.value)?.name.toLowerCase()
+          // Category filter: check if fandom's subcategory belongs to selected category
+          let matchesCategory = true
+          if (selectedCategory.value) {
+            const cat = categories.value.find(c => c.id == selectedCategory.value)
+            matchesCategory = cat && cat.subcategories && cat.subcategories.some(sub => sub.name === fandom.subcategory)
+          }
 
-    // Subcategory filter
-    const matchesSubcategory = !selectedSubcategory.value ||
-      fandom.subcategory?.toLowerCase() === subcategories.value.find(s => s.id == selectedSubcategory.value)?.name.toLowerCase()
-
-    return matchesSearch && matchesCategory && matchesSubcategory
+          return matchesSearch && matchesCategory
   })
 })
 
@@ -244,8 +240,7 @@ const updateSubcategories = () => {
 
 // Modal controls
 const showAddFandomModal = ref(false)
-const showAddCategoryModal = ref(false)
-const showAddSubcategoryModal = ref(false)
+
 
 // Formatting functions
 const formatNumber = (num) => {
@@ -271,45 +266,14 @@ const handleAddFandom = (newFandom) => {
   closeAddFandomModal()
 }
 
-const openAddCategoryModal = () => {
-  showAddCategoryModal.value = true
-}
 
-const closeAddCategoryModal = () => {
-  showAddCategoryModal.value = false
-}
 
-const handleAddCategory = (newCategory) => {
-  categories.value.push({
-    id: Date.now(),
-    name: newCategory.name
-  })
-  closeAddCategoryModal()
-}
 
-const openAddSubcategoryModal = () => {
-  showAddSubcategoryModal.value = true
-}
-
-const closeAddSubcategoryModal = () => {
-  showAddSubcategoryModal.value = false
-}
-
-const handleAddSubcategory = (newSubcategory) => {
-  subcategories.value.push({
-    id: Date.now(),
-    categoryId: newSubcategory.categoryId,
-    name: newSubcategory.name
-  })
-  closeAddSubcategoryModal()
-}
 
 // Fetch data on mount
 onMounted(() => {
-  // In a real app, you would fetch this data from an API
-  // fetchFandoms()
-  // fetchCategories()
-  // fetchSubcategories()
+  fetchFandoms()
+  fetchCategoriesAndSubcategories()
 })
 </script>
 
