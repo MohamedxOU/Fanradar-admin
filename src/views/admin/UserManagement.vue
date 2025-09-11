@@ -371,20 +371,26 @@ const fetchUsers = async () => {
   error.value = null
   try {
     const response = await getUsers()
-    users.value = response.data.map(user => ({
-      id: user.id,
-      name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-      first_name: user.first_name,
-      last_name: user.last_name,
-      email: user.email,
-      role: user.role,
-      joinedDate: user.created_at || user.joinedDate || '',
-      avatar: user.image
-        ? `${import.meta.env.VITE_STORAGE_URL}/public/${user.image}`
-        : user.profile_image
-          ? `${import.meta.env.VITE_STORAGE_URL}/public/${user.profile_image}`
-          : '',
-    }))
+
+    users.value = response.data.map(user => {
+      // Helper to resolve avatar URL
+      const resolveAvatar = (img) => {
+        if (!img) return ''
+        if (img.startsWith('http://') || img.startsWith('https://')) return img
+        // Otherwise treat as storage path
+        return `${import.meta.env.VITE_STORAGE_URL}/public/${img}`
+      }
+      return {
+        id: user.id,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        role: user.role,
+        joinedDate: user.created_at || user.joinedDate || '',
+        avatar: resolveAvatar(user.image) || resolveAvatar(user.profile_image),
+      }
+    })
 
     // Update stats with proper calculations
     updateUserStats()

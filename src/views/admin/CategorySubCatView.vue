@@ -8,7 +8,9 @@
 			</div>
 			<div class="space-x-2 flex-shrink-0">
 				<button class="btn btn-primary" @click="showAddCategory = true">Add Category</button>
+				<button class="btn btn-error" @click="deleteAllCategories" :disabled="loading || categories.length === 0">Delete All Categories</button>
 			</div>
+
 		</div>
 
 		<div v-if="loading" class="flex justify-center items-center h-32">
@@ -105,6 +107,30 @@ const filteredCategories = computed(() => {
 		return false
 	})
 })
+
+// Delete all categories
+const deleteAllCategories = async () => {
+	if (!categories.value.length) return
+	if (!confirm('Are you sure you want to delete ALL categories? This action cannot be undone.')) return
+	loading.value = true
+	try {
+		for (const cat of categories.value) {
+			try {
+				await deleteCategory(cat.id, auth.token)
+			} catch (e) {
+				// Optionally handle individual errors
+				console.error(`Failed to delete category ${cat.name}`, e)
+			}
+		}
+		alert('All categories deleted successfully')
+		await fetchCategories()
+	} catch (e) {
+		alert('Failed to delete all categories')
+		console.error('Failed to delete all categories', e)
+	} finally {
+		loading.value = false
+	}
+}
 
 const totalPages = computed(() => Math.ceil(filteredCategories.value.length / pageSize))
 const paginatedCategories = computed(() => {
