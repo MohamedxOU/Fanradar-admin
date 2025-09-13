@@ -44,20 +44,24 @@
 </template>
 
 <script setup>
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-// import { updateProfile } from '@/api/user' // Uncomment and implement as needed
+import { updateUser } from '@/api/user'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user || {})
+
 
 const form = reactive({
   email: '',
   first_name: '',
   last_name: '',
   joinedDate: '',
-  profile_image: ''
+  profile_image: '' // string or path
 })
+// Store the selected file separately
+let newProfileImageFile = null
 
 const editable = ref(false)
 const loading = ref(false)
@@ -84,12 +88,14 @@ const onImageChange = (e) => {
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg']
     if (!validTypes.includes(file.type)) {
       errorMessage.value = 'Profile image must be a JPG or PNG file.'
+      newProfileImageFile = null
       return
     }
-    // For demo: convert to base64. In real app, upload to server and use returned path.
+    newProfileImageFile = file
+    // For preview, show the selected image
     const reader = new FileReader()
     reader.onload = (event) => {
-      form.profile_image = event.target.result // base64 string
+      form.profile_image = event.target.result // base64 for preview only
     }
     reader.onerror = () => {
       errorMessage.value = 'Failed to read image file.'
@@ -103,11 +109,34 @@ const saveProfile = async () => {
   errorMessage.value = ''
   successMessage.value = ''
   try {
-    // await updateProfile(form) // Uncomment and implement API call
-    // For demo, just show success
+    const userId = user.value.id
+    const token = authStore.token
+    let updateData
+    if (newProfileImageFile) {
+      // If a new file is selected, use FormData
+      updateData = new FormData()
+      updateData.append('first_name', form.first_name)
+      updateData.append('last_name', form.last_name)
+      updateData.append('profile_image', newProfileImageFile)
+    } else {
+      // Otherwise, send as JSON
+      updateData = {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        profile_image: form.profile_image
+      }
+    }
+    await updateUser(userId, updateData, token)
+    // Update authStore user
+    authStore.setUser({
+      ...user.value,
+      first_name: form.first_name,
+      last_name: form.last_name,
+      profile_image: form.profile_image
+    })
     successMessage.value = 'Profile updated successfully.'
     editable.value = false
-    // Optionally update authStore.user here
+    newProfileImageFile = null
   } catch (e) {
     errorMessage.value = e?.message || 'Failed to update profile.'
   } finally {
@@ -125,6 +154,7 @@ const cancelEdit = () => {
   editable.value = false
   errorMessage.value = ''
   successMessage.value = ''
+  newProfileImageFile = null
 }
 
 onMounted(() => {

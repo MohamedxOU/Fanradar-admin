@@ -30,6 +30,7 @@ export const getUserById = async (id, token) => {
 export const updateUser = async (id, userData, token) => {
   try {
     const response = await apiClient.put(`/users/${id}`, userData, {
+
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -16,6 +16,9 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async login(credentials, remember = false) {
       const data = await apiLogin(credentials)
+      if (!data.user || data.user.role !== 'admin') {
+        throw new Error('Access denied: Only admin users can log in.')
+      }
       this.token = data.token
       this.user = data.user
       const storage = remember ? localStorage : sessionStorage

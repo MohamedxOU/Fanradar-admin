@@ -373,12 +373,13 @@ const fetchUsers = async () => {
     const response = await getUsers()
 
     users.value = response.data.map(user => {
-      // Helper to resolve avatar URL
-      const resolveAvatar = (img) => {
-        if (!img) return ''
-        if (img.startsWith('http://') || img.startsWith('https://')) return img
-        // Otherwise treat as storage path
-        return `${import.meta.env.VITE_STORAGE_URL}/public/${img}`
+      // Prefer profile_image, fallback to image
+      const img = user.profile_image || user.image || ''
+      let avatar = ''
+      if (img.startsWith('http://') || img.startsWith('https://')) {
+        avatar = img
+      } else if (img) {
+        avatar = `${import.meta.env.VITE_STORAGE_URL}/public/${img}`
       }
       return {
         id: user.id,
@@ -388,7 +389,7 @@ const fetchUsers = async () => {
         email: user.email,
         role: user.role,
         joinedDate: user.created_at || user.joinedDate || '',
-        avatar: resolveAvatar(user.image) || resolveAvatar(user.profile_image),
+        avatar
       }
     })
 
