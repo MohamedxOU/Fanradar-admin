@@ -101,29 +101,39 @@
     <div v-if="loading" class="flex justify-center items-center h-32">
       <span class="loading loading-spinner loading-lg"></span>
     </div>
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-8">
       <div v-for="fandom in filteredFandoms" :key="fandom.id"
-        class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
-        <figure class="px-4 pt-4">
-          <img :src="fandom.image" :alt="fandom.name" class="rounded-xl h-48 w-full object-cover" />
-        </figure>
-        <div class="card-body p-4">
-          <h2 class="card-title">{{ fandom.name }}</h2>
-          <div class="flex flex-wrap gap-2 mb-2">
-            <span class="badge badge-outline">{{ fandom.subcategory }}</span>
-          </div>
-          <div class="flex justify-between text-sm text-base-content/60">
-            <span>{{ fandom.memberCount }} members</span>
-            <span>{{ formatDate(fandom.createdAt) }}</span>
-          </div>
-          <div class="mt-2 text-sm">
-            <span class="font-medium">{{ fandom.postCount }}</span> posts
-          </div>
-          <div class="card-actions justify-end mt-4">
-            <button class="btn btn-sm btn-outline">Modify</button>
-            <button class="btn btn-sm btn-primary">View</button>
+        class="relative group bg-base-100 rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden border border-base-200 fandom-card">
+        <!-- Cover Image with Logo Overlay -->
+        <div class="relative h-36 w-full bg-base-200">
+          <img :src="fandom.cover_image" :alt="fandom.name + ' cover'" class="w-full h-full object-cover" />
+          <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+            <img :src="fandom.logo_image" :alt="fandom.name + ' logo'" class="rounded-full h-16 w-16 object-cover border-4 border-base-100 shadow-md bg-base-100" />
           </div>
         </div>
+        <!-- Card Content -->
+        <div class="pt-12 pb-4 px-5 flex flex-col gap-2">
+          <div class="flex flex-col items-center text-center">
+            <h2 class="font-bold text-lg leading-tight mb-1 line-clamp-1">{{ fandom.name }}</h2>
+            <div class="text-base-content/60 text-xs mb-2 line-clamp-2 min-h-[2.5em]">{{ fandom.description }}</div>
+          </div>
+          <div class="flex flex-wrap justify-center gap-2 mb-1">
+            <span v-if="fandom.subcategory" class="badge badge-outline badge-sm">{{ fandom.subcategory }}</span>
+          </div>
+          <div class="flex justify-between text-xs text-base-content/60 mb-1">
+            <span><span class="font-semibold">{{ fandom.members_count }}</span> members</span>
+            <span>{{ formatDate(fandom.created_at) }}</span>
+          </div>
+          <div class="flex justify-between text-xs text-base-content/60 mb-1">
+            <span><span class="font-semibold">{{ fandom.posts_count }}</span> posts</span>
+          </div>
+          <div class="flex justify-end gap-2 mt-2">
+            <button class="btn btn-xs btn-outline">Modify</button>
+            <button class="btn btn-xs btn-primary">View</button>
+          </div>
+        </div>
+        <!-- Subtle hover overlay -->
+        <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
       </div>
     </div>
 
@@ -196,15 +206,22 @@ const fetchFandoms = async () => {
   try {
     const res = await getFandoms(auth.token)
     // API: { success, data: { fandoms: [...] } }
+    const resolveImg = (img) => {
+      if (!img) return ''
+      if (img.startsWith('http://') || img.startsWith('https://')) return img
+      // Always prepend backend URL for storage paths
+      return `http://localhost:8000/${img}`
+    }
     fandoms.value = (res?.data?.fandoms || []).map(f => ({
       id: f.id,
       name: f.name,
       description: f.description,
-      image: f.logo_image || f.cover_image || '',
+      logo_image: resolveImg(f.logo_image),
+      cover_image: resolveImg(f.cover_image),
       subcategory: f.subcategory?.name || '',
-      memberCount: f.members_count,
-      postCount: f.posts_count,
-      createdAt: f.created_at
+      created_at: f.created_at,
+      posts_count: f.posts_count,
+      members_count: f.members_count
     }))
   } catch (e) {
     console.error(e)
@@ -289,5 +306,29 @@ onMounted(() => {
 
 .card:hover figure img {
   transform: scale(1.03);
+}
+/* Enhanced fandom card styles */
+.fandom-card {
+  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.04);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.fandom-card:hover {
+  box-shadow: 0 6px 24px 0 rgb(0 0 0 / 0.10);
+  transform: translateY(-2px) scale(1.02);
+}
+.fandom-card .line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fandom-card .line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fandom-card .min-h-\[2\.5em\] {
+  min-height: 2.5em;
 }
 </style>
