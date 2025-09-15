@@ -71,10 +71,12 @@ const errorMessage = ref('')
 const fullName = computed(() => `${form.first_name} ${form.last_name}`.trim())
 
 const profileImageUrl = computed(() => {
-  if (!form.profile_image) return '/default-avatar.png'
-  if (form.profile_image.startsWith('http://') || form.profile_image.startsWith('https://')) return form.profile_image
-  // Otherwise treat as storage path
-  return `${import.meta.env.VITE_STORAGE_URL}/public/${form.profile_image}`
+  const img = form.profile_image || ''
+  if (!img) return '/default-avatar.png'
+  if (img.startsWith('http://') || img.startsWith('https://')) return img
+  // Otherwise treat as storage path, match UserManagement.vue logic
+  const base = import.meta.env.VITE_STORAGE_URL || 'http://localhost:8000'
+  return `${base}/${img}`
 })
 
 const formatDate = (dateString) => {

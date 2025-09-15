@@ -169,7 +169,17 @@ const auth = useAuthStore()
 
 const userName = computed(() => auth.user?.first_name + ' ' + auth.user?.last_name || 'User')
 const userEmail = computed(() => auth.user?.email || '')
-const userAvatar = computed(() => auth.user?.profile_image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format')
+const userAvatar = computed(() => {
+  const img = auth.user?.profile_image || ''
+  if (img.startsWith('http://') || img.startsWith('https://')) {
+    return img
+  } else if (img) {
+    // Use same logic as UserManagement.vue, fallback to VITE_STORAGE_URL or localhost
+    const base = import.meta.env.VITE_STORAGE_URL || 'http://localhost:8000'
+    return `${base}/${img}`
+  }
+  return 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format'
+})
 
 // Sample notifications data
 const notifications = ref([

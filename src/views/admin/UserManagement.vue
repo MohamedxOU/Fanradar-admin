@@ -379,7 +379,7 @@ const fetchUsers = async () => {
       if (img.startsWith('http://') || img.startsWith('https://')) {
         avatar = img
       } else if (img) {
-        avatar = `${import.meta.env.VITE_STORAGE_URL}/public/${img}`
+        avatar = `${import.meta.env.VITE_STORAGE_URL}/${img}`
       }
       return {
         id: user.id,
