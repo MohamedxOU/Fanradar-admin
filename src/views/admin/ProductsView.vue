@@ -95,7 +95,7 @@
         >
           <figure class="px-4 pt-4 relative">
             <img
-              :src="product.medias && product.medias.length > 0 ? product.medias[0].url : '/public/images/test_logo.png'"
+              :src="resolveMediaUrl(product.medias && product.medias.length > 0 ? product.medias[0].url : '')"
               :alt="product.product_name"
               class="rounded-xl h-48 w-full object-cover"
             />
@@ -175,7 +175,7 @@
                 <div class="flex items-center gap-3">
                   <div class="avatar">
                     <div class="w-12 h-12 rounded">
-                      <img :src="product.medias && product.medias.length > 0 ? product.medias[0].url : '/public/images/test_logo.png'" :alt="product.product_name" />
+                      <img :src="resolveMediaUrl(product.medias && product.medias.length > 0 ? product.medias[0].url : '')" :alt="product.product_name" />
                     </div>
                   </div>
                   <div>
@@ -427,6 +427,14 @@ const formatCountdown = (dateString) => {
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   return `${days}d ${hours}h`
+}
+
+// Helper to resolve media URL for Laravel storage
+const resolveMediaUrl = (url) => {
+  if (!url) return '/public/images/test_logo.png'
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  const base = import.meta.env.VITE_STORAGE_URL || 'http://localhost:8000'
+  return `${base}/${url}`
 }
 
 // Edit product modal
