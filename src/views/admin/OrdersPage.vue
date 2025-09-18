@@ -162,7 +162,7 @@
     </div>
 
     <!-- Orders Table -->
-    <div class="bg-base-100 rounded-lg shadow overflow-hidden">
+    <div class="bg-base-100 rounded-lg shadow ">
       <table class="table w-full">
         <thead>
           <tr>
@@ -189,7 +189,7 @@
             </td>
             <td>
               <div class="font-bold">#{{ order.id }}</div>
-              <div class="text-sm text-base-content/60">{{ order.paymentMethod }}</div>
+
             </td>
             <td>
               <div class="flex items-center gap-3">
@@ -237,18 +237,16 @@
             </td>
             <td>
               <div class="flex gap-2">
-                <button @click="viewOrder(order)" class="btn btn-ghost btn-xs">
+                <button @click="openOrderDetails(order)" class="btn btn-ghost btn-xs">
                   <EyeIcon class="h-4 w-4" />
                 </button>
-                <button @click="printOrder(order)" class="btn btn-ghost btn-xs">
-                  <PrinterIcon class="h-4 w-4" />
-                </button>
-                <div class="dropdown dropdown-end">
+                <div class="dropdown dropdown-end" style="position: relative; z-index: 20;">
                   <label tabindex="0" class="btn btn-ghost btn-xs">
                     <EllipsisVerticalIcon class="h-4 w-4" />
                   </label>
-                  <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40">
+                  <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40" style="z-index: 50;">
                     <li><a @click="updateStatus(order, 'processing')">Mark as Processing</a></li>
+                    <li><a @click="updateStatus(order, 'confirmed')">Mark as Confirmed</a></li>
                     <li><a @click="updateStatus(order, 'shipped')">Mark as Shipped</a></li>
                     <li><a @click="updateStatus(order, 'delivered')">Mark as Delivered</a></li>
                     <li><a @click="cancelOrder(order)" class="text-error">Cancel Order</a></li>
@@ -299,12 +297,11 @@
       </div>
     </div>
 
-    <!-- Order Detail Modal -->
-    <OrderDetailModal
-      v-if="selectedOrder"
+    <!-- Order Details Modal -->
+    <OrderDetailsModal
       :order="selectedOrder"
-      @close="selectedOrder = null"
-      @update-status="handleStatusUpdate"
+      :visible="showOrderDetailsModal"
+      @close="closeOrderDetailsModal"
     />
   </div>
 </template>
@@ -319,49 +316,66 @@ import {
   ArrowDownTrayIcon,
   FunnelIcon,
   EyeIcon,
-  PrinterIcon,
   EllipsisVerticalIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon
 } from '@heroicons/vue/24/outline'
-import OrderDetailModal from '../../components/drops/OrderDetailModal.vue'
+import OrderDetailsModal from '../../components/admin/OrderDetailsModal.vue'
 
-// Sample data
-const orders = ref([
-  {
-    id: 'ORD-1001',
-    customer: {
-      name: 'Alex Johnson',
-      email: 'alex.johnson@example.com',
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-    },
-    date: '2023-11-15T09:30:00',
-    status: 'processing',
-    paymentMethod: 'Credit Card',
-    items: [
-      {
-        id: 1,
-        name: 'Limited Edition Sneakers',
-        image: 'https://images.unsplash.com/photo-1600269452121-4f2416e55c28?w=200&h=200&fit=crop',
-        price: 199.99,
-        quantity: 1
-      },
-      {
-        id: 2,
-        name: 'Premium Socks',
-        image: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=200&h=200&fit=crop',
-        price: 24.99,
-        quantity: 2
+import { onMounted } from 'vue'
+import { getOrders } from '@/api/orders'
+
+const orders = ref([])
+
+// Helper to resolve Laravel storage paths
+const resolveImg = (img) => {
+  if (!img) return '/public/images/test_logo.png'
+  if (img.startsWith('http://') || img.startsWith('https://')) return img
+  const base = import.meta.env.VITE_STORAGE_URL || 'http://localhost:8000'
+  return `${base}/${img}`
+}
+
+const fetchOrders = async () => {
+  try {
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token')
+    const res = await getOrders(token)
+    orders.value = (res || []).map(order => {
+      // Map user info
+      const user = order.user || {}
+      const customer = {
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        email: user.email || '',
+        avatar: resolveImg(user.profile_image)
       }
-    ],
-    subtotal: 249.97,
-    discount: 25.00,
-    shipping: 9.99,
-    tax: 20.50,
-    total: 255.46
-  },
-  // More sample orders...
-])
+      // Map products to items
+      const items = (order.products || []).map(prod => ({
+        id: prod.id,
+        name: prod.product_name,
+        image: prod.medias && prod.medias.length > 0 ? resolveImg(prod.medias[0].url) : '/public/images/test_logo.png',
+        price: Number(prod.price),
+        quantity: prod.pivot?.quantity || 1
+      }))
+      return {
+        id: order.id,
+        customer,
+        date: order.order_date || order.created_at,
+        status: order.status,
+        paymentMethod: order.payment_method || 'N/A',
+        items,
+        total: Number(order.total_amount),
+        discount: 0 // Add discount if available
+      }
+    })
+  } catch (err) {
+    // Optionally show error
+    orders.value = []
+    console.error('Failed to load orders', err)
+  }
+}
+
+onMounted(() => {
+  fetchOrders()
+})
 
 // Stats
 const stats = ref({
@@ -446,17 +460,21 @@ const goToPage = (page) => {
   currentPage.value = page
 }
 
-// Order actions
+// Order details modal logic
 const selectedOrder = ref(null)
+const showOrderDetailsModal = ref(false)
 
-const viewOrder = (order) => {
+const openOrderDetails = (order) => {
   selectedOrder.value = order
+  showOrderDetailsModal.value = true
 }
 
-const printOrder = (order) => {
-  console.log('Printing order:', order.id)
-  // Implement print functionality
+const closeOrderDetailsModal = () => {
+  showOrderDetailsModal.value = false
+  selectedOrder.value = null
 }
+
+
 
 const updateStatus = (order, status) => {
   order.status = status
@@ -466,13 +484,6 @@ const updateStatus = (order, status) => {
 const cancelOrder = (order) => {
   order.status = 'cancelled'
   // In a real app, you would update via API
-}
-
-const handleStatusUpdate = (orderId, newStatus) => {
-  const order = orders.value.find(o => o.id === orderId)
-  if (order) {
-    order.status = newStatus
-  }
 }
 
 // Filter actions

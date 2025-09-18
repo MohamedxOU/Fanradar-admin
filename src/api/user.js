@@ -1,10 +1,12 @@
 import apiClient from "./config";
 
 //get users
-export const getUsers = async () => {
+export const getUsers = async (token) => {
   try {
     const response = await apiClient.get("/users", {
-
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   } catch (error) {

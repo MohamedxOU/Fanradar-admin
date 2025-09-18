@@ -370,7 +370,8 @@ const fetchUsers = async () => {
   loading.value = true
   error.value = null
   try {
-    const response = await getUsers()
+    const token = authStore.token
+    const response = await getUsers(token)
 
     users.value = response.data.map(user => {
       // Prefer profile_image, fallback to image
