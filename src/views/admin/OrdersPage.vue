@@ -318,7 +318,6 @@ import {
   ArrowDownTrayIcon,
   FunnelIcon,
   EyeIcon,
-  TrashIcon,
   EllipsisVerticalIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon
@@ -326,7 +325,7 @@ import {
 import OrderDetailsModal from '../../components/admin/OrderDetailsModal.vue'
 
 import { onMounted } from 'vue'
-import { getOrders, updateOrder, deleteOrder } from '@/api/orders'
+import { getOrders, updateOrder } from '@/api/orders'
 
 const orders = ref([])
 
@@ -501,20 +500,6 @@ const cancelOrder = (order) => {
       console.error('Failed to cancel order', err)
       // Optionally revert status change or show error
     })
-}
-
-const deleteSelectedOrder = (order) => {
-  // Implement delete logic, e.g., call API to delete order
-  console.log('Deleting order', order.id)
-  deleteOrder(order.id, sessionStorage.getItem('token') || localStorage.getItem('token'))
-    .then(() => {
-      orders.value = orders.value.filter(o => o.id !== order.id)
-    })
-    .catch(err => {
-      console.error('Failed to delete order', err)
-      // Optionally show error
-    })
-
 }
 
 // Filter actions
