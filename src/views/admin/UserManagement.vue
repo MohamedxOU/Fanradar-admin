@@ -9,14 +9,7 @@
         <PlusIcon class="h-5 w-5" />
         <span class="hidden md:inline">Add User</span>
       </button>
-      <button @click="openRoleManagement" class="btn btn-outline">
-        <Cog6ToothIcon class="h-5 w-5" />
-        <span class="hidden md:inline">Manage Roles</span>
-      </button>
-      <button @click="open2FASettings" class="btn btn-outline">
-        <LockClosedIcon class="h-5 w-5" />
-        <span class="hidden md:inline">2FA Settings</span>
-      </button>
+      <!-- Removed Manage Roles and 2FA Settings buttons -->
     </div>
   </div>
     <!-- Stats Cards Section -->
@@ -176,7 +169,7 @@
     <td>{{ formatDate(user.joinedDate) }}</td>
     <td>
       <div class="flex gap-2">
-        <button @click="editUser(user)" class="btn btn-ghost btn-sm">
+        <button v-if="user.id !== currentUserId" @click="editUser(user)" class="btn btn-ghost btn-sm">
           <PencilSquareIcon class="h-4 w-4" />
         </button>
         <button @click="viewUser(user)" class="btn btn-ghost btn-sm">
@@ -220,20 +213,15 @@
       @save="handleAddUser"
     />
 
-    <!-- Edit User Modal (role/image only) -->
+    <!-- Edit User Modal (role only) -->
     <div v-if="showEditUserModal" class="modal modal-open">
       <div class="modal-box max-w-md">
-        <h3 class="font-bold text-lg mb-4">Edit User</h3>
+        <h3 class="font-bold text-lg mb-4">Edit User Role</h3>
         <div class="form-control mb-4">
           <label class="label">Role</label>
           <select v-model="userToEdit.role" class="select select-bordered w-full">
             <option v-for="role in roles" :value="role.value">{{ role.label }}</option>
           </select>
-        </div>
-        <div class="form-control mb-4">
-          <label class="label">Profile Image</label>
-          <input type="file" accept="image/*" @change="e => onEditImageChange(e)" class="file-input file-input-bordered w-full" />
-          <div v-if="userToEdit.avatar" class="mt-2"><img :src="userToEdit.avatar" alt="avatar" class="w-16 h-16 rounded-full" /></div>
         </div>
         <div class="modal-action">
           <button class="btn btn-ghost" @click="closeEditUserModal">Cancel</button>
@@ -298,8 +286,7 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   PlusIcon,
-  Cog6ToothIcon,
-  LockClosedIcon,
+
   PencilSquareIcon,
   EyeIcon
 } from '@heroicons/vue/24/outline'
@@ -542,21 +529,6 @@ const handleAddUser = (newUser) => {
   closeAddUserModal()
 }
 
-const openRoleManagement = () => {
-  showRoleManagementModal.value = true
-}
-
-const closeRoleManagementModal = () => {
-  showRoleManagementModal.value = false
-}
-
-const open2FASettings = () => {
-  show2FASettingsModal.value = true
-}
-
-const close2FASettingsModal = () => {
-  show2FASettingsModal.value = false
-}
 
 const editUser = (user) => {
   userToEdit.value = { ...user }
@@ -570,18 +542,15 @@ const closeEditUserModal = () => {
 
 const saveEditUser = async (updatedUser) => {
   try {
-    // Prepare form data for update (role and avatar)
+    // Only update role
     const formData = new FormData()
     formData.append('role', updatedUser.role)
-    // If avatar is a new file, you would append it here
-    // For demo, we only update role
     const token = authStore.token
     await updateUser(updatedUser.id, formData, token)
     // Update local list
     const idx = users.value.findIndex(u => u.id === updatedUser.id)
     if (idx !== -1) {
       users.value[idx].role = updatedUser.role
-      users.value[idx].avatar = updatedUser.avatar
     }
     closeEditUserModal()
   } catch (e) {
@@ -633,19 +602,7 @@ const deleteUserConfirmed = async () => {
 
 }
 
-// Handle image change in edit modal
-const onEditImageChange = (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg']
-    if (!validTypes.includes(file.type)) {
-      // Optionally show error
-      return
-    }
-    // For demo, use local URL. In real app, upload to server and get URL.
-    userToEdit.value.avatar = URL.createObjectURL(file)
-  }
-}
+// Removed image change handler for edit modal (role only)
 
 // Fetch data on mount
 onMounted(() => {
