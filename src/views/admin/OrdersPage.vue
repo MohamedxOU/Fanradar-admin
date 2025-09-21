@@ -252,6 +252,8 @@
                     <li><a @click="cancelOrder(order)" class="text-error">Cancel Order</a></li>
                   </ul>
                 </div>
+
+
               </div>
             </td>
           </tr>
@@ -316,6 +318,7 @@ import {
   ArrowDownTrayIcon,
   FunnelIcon,
   EyeIcon,
+  TrashIcon,
   EllipsisVerticalIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon
@@ -323,7 +326,7 @@ import {
 import OrderDetailsModal from '../../components/admin/OrderDetailsModal.vue'
 
 import { onMounted } from 'vue'
-import { getOrders } from '@/api/orders'
+import { getOrders, updateOrder, deleteOrder } from '@/api/orders'
 
 const orders = ref([])
 
@@ -478,12 +481,40 @@ const closeOrderDetailsModal = () => {
 
 const updateStatus = (order, status) => {
   order.status = status
-  // In a real app, you would update via API
+  updateOrder(order.id, { status }, sessionStorage.getItem('token') || localStorage.getItem('token'))
+    .then(() => {
+      // Optionally show success message
+    })
+    .catch(err => {
+      console.error('Failed to update order status', err)
+      // Optionally revert status change or show error
+    })
 }
 
 const cancelOrder = (order) => {
   order.status = 'cancelled'
-  // In a real app, you would update via API
+  updateOrder(order.id, { status: 'cancelled' }, sessionStorage.getItem('token') || localStorage.getItem('token'))
+    .then(() => {
+      // Optionally show success message
+    })
+    .catch(err => {
+      console.error('Failed to cancel order', err)
+      // Optionally revert status change or show error
+    })
+}
+
+const deleteSelectedOrder = (order) => {
+  // Implement delete logic, e.g., call API to delete order
+  console.log('Deleting order', order.id)
+  deleteOrder(order.id, sessionStorage.getItem('token') || localStorage.getItem('token'))
+    .then(() => {
+      orders.value = orders.value.filter(o => o.id !== order.id)
+    })
+    .catch(err => {
+      console.error('Failed to delete order', err)
+      // Optionally show error
+    })
+
 }
 
 // Filter actions
