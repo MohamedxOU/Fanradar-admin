@@ -174,9 +174,8 @@ const userAvatar = computed(() => {
   if (img.startsWith('http://') || img.startsWith('https://')) {
     return img
   } else if (img) {
-    // Use same logic as UserManagement.vue, fallback to VITE_STORAGE_URL or localhost
-    const base = import.meta.env.VITE_STORAGE_URL || 'http://localhost:8000'
-    return `${base}/${img}`
+
+    return `${import.meta.env.VITE_STORAGE_URL}/${img}`
   }
   return 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format'
 })
