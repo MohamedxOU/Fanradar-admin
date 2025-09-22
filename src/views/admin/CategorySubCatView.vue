@@ -93,6 +93,7 @@ const showAddSubcategory = ref(false)
 const addSubcategoryCategoryId = ref(null)
 const auth = useAuthStore()
 
+
 // Pagination and search
 const search = ref('')
 const currentPage = ref(1)
@@ -162,8 +163,8 @@ const fetchCategories = async () => {
 	loading.value = true
 	try {
 		const [catRes, subRes] = await Promise.all([
-			getCategories(),
-			getSubCategories()
+			getCategories(auth.token),
+			getSubCategories(auth.token)
 		])
 		const cats = Array.isArray(catRes) ? catRes : []
 		const subs = Array.isArray(subRes) ? subRes : []

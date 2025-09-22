@@ -1,9 +1,12 @@
 import apiClient from "./config";
 
 //get all categories
-export const getCategories = async () => {
+export const getCategories = async (token) => {
   try {
     const response = await apiClient.get("/categories", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
 
     });
     return response.data;
@@ -14,9 +17,12 @@ export const getCategories = async () => {
 }
 
 //get category with it's subcategories by id
-export const getCategoryWithSubCategories = async (id) => {
+export const getCategoryWithSubCategories = async (id, token) => {
   try {
     const response = await apiClient.get(`/categories/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   }
@@ -78,9 +84,12 @@ export const deleteCategory = async (id, token) => {
 
 
 //get all subcategories
-export const getSubCategories = async () => {
+export const getSubCategories = async (token) => {
   try {
     const response = await apiClient.get("/subcategories", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   }
@@ -90,9 +99,13 @@ export const getSubCategories = async () => {
 }
 
 //get subcategory by id
-export const getSubCategoryById = async (id) => {
+export const getSubCategoryById = async (id, token) => {
   try {
     const response = await apiClient.get(`/subcategories/${id}`, {
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   }

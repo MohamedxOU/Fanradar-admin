@@ -128,8 +128,9 @@
             <span><span class="font-semibold">{{ fandom.posts_count }}</span> posts</span>
           </div>
           <div class="flex justify-end gap-2 mt-2">
-            <button class="btn btn-xs btn-outline">Modify</button>
+
             <button class="btn btn-xs btn-primary">View</button>
+            <button class="btn btn-xs btn-error" @click="handleDeleteFandom(fandom)">Delete</button>
           </div>
         </div>
         <!-- Subtle hover overlay -->
@@ -150,7 +151,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AddFandomModal from '../../components/admin/AddFandomModal.vue'
-import { getFandoms } from '@/api/fandoms'
+import { getFandoms, deleteFandomById } from '@/api/fandoms'
 import { getCategories, getSubCategories } from '@/api/categoryAndSubCat'
 import { useAuthStore } from '@/stores/auth'
 
@@ -173,8 +174,8 @@ const subcategories = ref([])
 const fetchCategoriesAndSubcategories = async () => {
   try {
     const [catRes, subRes] = await Promise.all([
-      getCategories(),
-      getSubCategories()
+      getCategories(auth.token),
+      getSubCategories(auth.token)
     ])
     const cats = Array.isArray(catRes) ? catRes : []
     const subs = Array.isArray(subRes) ? subRes : []
@@ -284,6 +285,17 @@ const handleAddFandom = (newFandom) => {
 }
 
 
+const handleDeleteFandom = async (fandom) => {
+  if (!confirm(`Are you sure you want to delete fandom "${fandom.name}"?`)) return
+  try {
+    await deleteFandomById(fandom.id, auth.token)
+    fandoms.value = fandoms.value.filter(f => f.id !== fandom.id)
+    stats.value.totalFandoms--
+  } catch (e) {
+    alert('Failed to delete fandom.')
+    console.error('Failed to delete fandom', e)
+  }
+}
 
 
 
