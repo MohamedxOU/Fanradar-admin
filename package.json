@@ -17,6 +17,7 @@
     "@tiptap/vue-3": "^3.0.7",
     "@vueform/multiselect": "^2.6.11",
     "axios": "^1.11.0",
+    "chart.js": "^4.5.0",
     "daisyui": "^5.0.48",
     "pinia": "^3.0.3",
     "theme-change": "^2.5.0",

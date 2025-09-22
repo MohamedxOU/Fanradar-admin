@@ -103,7 +103,7 @@
       <div class="card bg-base-100 shadow p-6">
         <h2 class="text-lg font-bold mb-4">Site Traffic</h2>
         <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-          <p class="text-gray-500">Traffic chart would display here</p>
+          <canvas ref="trafficChart" class="w-full h-full"></canvas>
         </div>
         <div class="mt-4 grid grid-cols-3 gap-4 text-center">
           <div v-for="(source, index) in stats.traffic.sources" :key="index" class="text-sm">
@@ -165,9 +165,62 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import Chart from 'chart.js/auto'
 
 const selectedRange = ref('7')
+const trafficChart = ref(null)
+let chartInstance = null
+const getTrafficChartData = () => {
+  // Mock: generate traffic data for the selected range
+  // For demo, just use random data
+  const days = Number(selectedRange.value)
+  const labels = Array.from({ length: days }, (_, i) => `Day ${i + 1}`)
+  // Simulate traffic numbers
+  const base = stats.value.traffic.total / days
+  const data = labels.map((_, i) => Math.round(base + Math.sin(i / 2) * base * 0.2 + Math.random() * base * 0.1))
+  return { labels, data }
+}
+
+const renderTrafficChart = () => {
+  if (!trafficChart.value) return
+  const ctx = trafficChart.value.getContext('2d')
+  const { labels, data } = getTrafficChartData()
+  if (chartInstance) chartInstance.destroy()
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Site Traffic',
+        data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, grid: { color: '#e5e7eb' } }
+      }
+    }
+  })
+}
+
+onMounted(() => {
+  renderTrafficChart()
+})
+
+watch(selectedRange, () => {
+  renderTrafficChart()
+})
 
 const stats = ref({
   traffic: {
