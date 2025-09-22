@@ -10,14 +10,12 @@ import AllPosts from '@/views/admin/AllPosts.vue'
 import FandomsView from '@/views/admin/FandomsView.vue'
 import PendingPosts from '@/views/admin/PendingPosts.vue'
 import ScheduledPosts from '@/views/admin/ScheduledPosts.vue'
-import AddPost from '@/views/admin/AddPost.vue'
+
 import ProductsView from '@/views/admin/ProductsView.vue'
 import OrdersPage from '@/views/admin/OrdersPage.vue'
 import RadarTracker from '@/views/admin/RadarTracker.vue'
 import AnalyticsView from '@/views/admin/AnalyticsView.vue'
-import FooterLegalManagement from '@/views/admin/FooterLegalManagement.vue'
-import SettingsView from '@/views/admin/SettingsView.vue'
-import FansContent from '@/views/admin/FansContent.vue'
+
 import CategorySubCatView from '@/views/admin/CategorySubCatView.vue'
 import ProfileView from '@/views/account/ProfileView.vue'
 
@@ -64,17 +62,8 @@ const router = createRouter({
           component: AllPosts,
         },
 
-         {
-          path: 'add-post',
-          name: 'add-post',
-          component: AddPost,
-         },
 
-         {
-          path: 'fans-content',
-          name: 'fans-content',
-          component: FansContent,
-         },
+
         {
           path: 'pending-posts',
           name: 'pending-posts',
@@ -119,17 +108,9 @@ const router = createRouter({
 
         },
 
-        {
-          path : 'footer-legal',
-          name: 'footer-legal-management',
-          component: FooterLegalManagement,
-        },
 
-        {
-          path: 'settings',
-          name: 'settings',
-          component: SettingsView,
-        },
+
+
         {
           path: 'categories-subcategories',
           name: 'categories-subcategories',

@@ -154,17 +154,16 @@ import {
   NewspaperIcon as PostsIcon,
   ClockIcon as PendingPostsIcon,
   CalendarDaysIcon as ScheduledPostsIcon,
-  PencilSquareIcon as AddPostIcon,
+
   ShoppingBagIcon as ShopIcon,
   ShoppingCartIcon as ShopCartIcon,
-  ClipboardDocumentIcon as FansContentIcon,
+
   PresentationChartLineIcon as FandomTrackerIcon,
   ChartBarSquareIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  BarsArrowDownIcon,
-  Cog6ToothIcon,
+
 TagIcon
 } from '@heroicons/vue/24/outline'
 import HomeIcon from '@/icons/HomeIcon.vue'
@@ -243,8 +242,7 @@ const generalItems = [
 
 const cmsItems = [
   { route: '/posts', label: 'All posts', icon: PostsIcon },
-  {route : '/fans-content', label: 'Fans content', icon: FansContentIcon},
-  {route : '/add-post', label: 'Add post', icon: AddPostIcon, exact: true},
+
 
   { route: '/pending-posts', label: 'Pending posts', icon: PendingPostsIcon },
   {route: '/scheduled-posts', label: 'Scheduled posts', icon: ScheduledPostsIcon }
@@ -257,8 +255,6 @@ const shopDropItems = [
 
 const otherItems = [
 {route : '/analytics', label: 'Analytics', icon: ChartBarSquareIcon},
-{ route: '/footer-legal', label: 'Footer management', icon: BarsArrowDownIcon },
-{ route: '/settings', label: 'Settings', icon: Cog6ToothIcon },
 
 
 ]
