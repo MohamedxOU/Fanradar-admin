@@ -14,82 +14,65 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <!-- Site Traffic -->
+      <!-- Total Users -->
       <div class="card bg-base-100 shadow">
         <div class="card-body">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="card-title text-sm">Site Traffic</h2>
-              <p class="text-3xl font-bold">{{ formatNumber(stats.traffic.total) }}</p>
-              <div class="flex items-center mt-2">
-                <span :class="stats.traffic.change >= 0 ? 'text-success' : 'text-error'">
-                  {{ stats.traffic.change >= 0 ? '↑' : '↓' }} {{ Math.abs(stats.traffic.change) }}%
-                </span>
-                <span class="text-sm text-gray-500 ml-1">vs previous period</span>
-              </div>
+              <h2 class="card-title text-sm">Total Users</h2>
+              <p class="text-3xl font-bold">{{ formatNumber(topStats.users) }}</p>
             </div>
             <div class="p-3 rounded-full bg-primary/10">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 14a4 4 0 01-8 0V7a4 4 0 018 0v7z" />
               </svg>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Trending Content -->
+      <!-- Total Fandoms -->
       <div class="card bg-base-100 shadow">
         <div class="card-body">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="card-title text-sm">Trending Posts</h2>
-              <p class="text-3xl font-bold">{{ formatNumber(stats.trending.count) }}</p>
-              <p class="text-sm mt-2">Top: {{ stats.trending.topPost }}</p>
+              <h2 class="card-title text-sm">Total Fandoms</h2>
+              <p class="text-3xl font-bold">{{ formatNumber(topStats.fandoms) }}</p>
             </div>
             <div class="p-3 rounded-full bg-success/10">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Fan Contributions -->
+      <!-- Total Posts -->
       <div class="card bg-base-100 shadow">
         <div class="card-body">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="card-title text-sm">Fan Contributions</h2>
-              <p class="text-3xl font-bold">{{ formatNumber(stats.contributions.total) }}</p>
-              <div class="flex items-center mt-2">
-                <span class="text-sm text-gray-500">{{ stats.contributions.topType }}: {{ stats.contributions.topCount }}</span>
-              </div>
+              <h2 class="card-title text-sm">Total Posts</h2>
+              <p class="text-3xl font-bold">{{ formatNumber(topStats.posts) }}</p>
             </div>
             <div class="p-3 rounded-full bg-info/10">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Newsletter Subscribers -->
+      <!-- Total Medias -->
       <div class="card bg-base-100 shadow">
         <div class="card-body">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="card-title text-sm">Newsletter Subs</h2>
-              <p class="text-3xl font-bold">{{ formatNumber(stats.newsletter.total) }}</p>
-              <div class="flex items-center mt-2">
-                <span class="text-success">+{{ stats.newsletter.newThisPeriod }}</span>
-                <span class="text-sm text-gray-500 ml-1">new</span>
-              </div>
+              <h2 class="card-title text-sm">Total Medias</h2>
+              <p class="text-3xl font-bold">{{ formatNumber(topStats.medias) }}</p>
             </div>
             <div class="p-3 rounded-full bg-warning/10">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
           </div>
@@ -167,6 +150,28 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import Chart from 'chart.js/auto'
+import { getUserCount, getFandomCount, getPostCount, getMediaCount } from '@/api/stats'
+import { useAuthStore } from '@/stores/auth'
+const auth = useAuthStore()
+const topStats = ref({ users: 0, fandoms: 0, posts: 0, medias: 0 })
+
+const fetchTopStats = async () => {
+  try {
+    const [users, fandoms, posts, medias] = await Promise.all([
+      getUserCount(auth.token),
+      getFandomCount(auth.token),
+      getPostCount(auth.token),
+      getMediaCount(auth.token)
+    ])
+    topStats.value.users = users.count || 0
+    topStats.value.fandoms = fandoms.count || 0
+    topStats.value.posts = posts.count || 0
+    topStats.value.medias = medias.count || 0
+  } catch (e) {
+    // Optionally handle error
+    console.error('Error fetching top stats:', e)
+  }
+}
 
 const selectedRange = ref('7')
 const trafficChart = ref(null)
@@ -216,6 +221,7 @@ const renderTrafficChart = () => {
 
 onMounted(() => {
   renderTrafficChart()
+  fetchTopStats()
 })
 
 watch(selectedRange, () => {
