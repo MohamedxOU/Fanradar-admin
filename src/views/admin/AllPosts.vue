@@ -201,6 +201,10 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { getPosts } from '@/api/posts'
 import { getCategories, getSubCategories } from '@/api/categoryAndSubCat'
 import {  getFandomById, getFandoms } from '@/api/fandoms'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+
 
 // View mode
 const viewMode = ref('grid') // 'grid' or 'table'
@@ -292,7 +296,7 @@ const fetchPosts = async () => {
   loading.value = true
   error.value = ''
   try {
-    const res = await getPosts(currentPage.value)
+    const res = await getPosts(currentPage.value, auth.token)
     const postsArr = res.data || []
     // Fetch fandom details for posts with fandom_id
     const fandomIds = [...new Set(postsArr.map(p => p.fandom_id).filter(Boolean))]

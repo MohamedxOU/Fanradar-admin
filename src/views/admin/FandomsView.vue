@@ -24,7 +24,10 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-medium text-base-content/60">Total Fandoms</h3>
-            <p class="text-3xl font-bold mt-2">{{ formatNumber(stats.totalFandoms) }}</p>
+            <p class="text-3xl font-bold mt-2">
+              <span v-if="!statsLoading">{{ formatNumber(stats.totalFandoms) }}</span>
+              <span v-else class="loading loading-spinner loading-md"></span>
+            </p>
           </div>
           <div class="p-3 rounded-full bg-primary/10">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24"
@@ -41,7 +44,10 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-medium text-base-content/60">Total Posts</h3>
-            <p class="text-3xl font-bold mt-2">{{ formatNumber(stats.totalPosts) }}</p>
+            <p class="text-3xl font-bold mt-2">
+              <span v-if="!statsLoading">{{ formatNumber(stats.totalPosts) }}</span>
+              <span v-else class="loading loading-spinner loading-md"></span>
+            </p>
           </div>
           <div class="p-3 rounded-full bg-success/10">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24"
@@ -58,7 +64,10 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-medium text-base-content/60">Total Medias</h3>
-            <p class="text-3xl font-bold mt-2">{{ formatNumber(stats.totalMedias) }}</p>
+            <p class="text-3xl font-bold mt-2">
+              <span v-if="!statsLoading">{{ formatNumber(stats.totalMedias) }}</span>
+              <span v-else class="loading loading-spinner loading-md"></span>
+            </p>
           </div>
           <div class="p-3 rounded-full bg-info/10">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24"
@@ -153,14 +162,48 @@ import { ref, computed, onMounted } from 'vue'
 import AddFandomModal from '../../components/admin/AddFandomModal.vue'
 import { getFandoms, deleteFandomById } from '@/api/fandoms'
 import { getCategories, getSubCategories } from '@/api/categoryAndSubCat'
+import { getFandomCount, getPostCount, getMediaCount } from '@/api/stats'
 import { useAuthStore } from '@/stores/auth'
 
 // Stats data
 const stats = ref({
-  totalFandoms: 1243,
-  totalPosts: 45678,
-  totalMedias: 23456
+  totalFandoms: 0,
+  totalPosts: 0,
+  totalMedias: 0
 })
+const statsLoading = ref(false)
+
+const fetchStats = async () => {
+  statsLoading.value = true
+  try {
+    const auth = useAuthStore()
+    const [fandoms, posts, medias] = await Promise.all([
+      getFandomCount(auth.token),
+      getPostCount(auth.token),
+      getMediaCount(auth.token)
+    ])
+    stats.value.totalFandoms = fandoms.fandom_count || fandoms.count || 0
+    // posts: sum all counts in post_counts array
+    if (Array.isArray(posts.post_counts)) {
+      stats.value.totalPosts = posts.post_counts.reduce((sum, p) => sum + (p.count || 0), 0)
+    } else {
+      stats.value.totalPosts = posts.count || 0
+    }
+    // medias: sum all counts in media_counts array
+    if (Array.isArray(medias.media_counts)) {
+      stats.value.totalMedias = medias.media_counts.reduce((sum, m) => sum + (m.count || 0), 0)
+    } else {
+      stats.value.totalMedias = medias.count || 0
+    }
+  } catch (e) {
+    stats.value.totalFandoms = 0
+    stats.value.totalPosts = 0
+    stats.value.totalMedias = 0
+    console.error('Failed to fetch stats', e)
+  } finally {
+    statsLoading.value = false
+  }
+}
 
 // Search and filters
 const searchQuery = ref('')
@@ -301,6 +344,7 @@ const handleDeleteFandom = async (fandom) => {
 
 // Fetch data on mount
 onMounted(() => {
+  fetchStats()
   fetchFandoms()
   fetchCategoriesAndSubcategories()
 })

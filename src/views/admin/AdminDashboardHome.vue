@@ -99,16 +99,20 @@
       <!-- Top Fandoms -->
       <div class="card bg-base-100 shadow p-6">
         <h2 class="text-lg font-bold mb-4">Top Fandoms</h2>
-        <div class="space-y-4">
-          <div v-for="(fandom, index) in stats.topFandoms" :key="index" class="flex items-center">
+        <div v-if="topFandomsLoading" class="flex justify-center items-center h-32">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
+        <div v-else-if="topFandoms.length === 0" class="text-center text-gray-400 py-10">No fandoms found.</div>
+        <div v-else class="space-y-4">
+          <div v-for="(fandom, index) in topFandoms" :key="fandom.id" class="flex items-center">
             <div class="w-8 text-center font-medium">{{ index + 1 }}.</div>
             <div class="flex-1">
               <p class="font-medium">{{ fandom.name }}</p>
               <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-primary h-2 rounded-full" :style="`width: ${fandom.percentage}%`"></div>
+                <div class="bg-primary h-2 rounded-full" :style="`width: ${getFandomBarWidth(fandom)}%`"></div>
               </div>
             </div>
-            <div class="w-16 text-right text-sm">{{ fandom.engagement }} </div>
+            <div class="w-16 text-right text-sm">{{ fandom.members_count }} members</div>
           </div>
         </div>
       </div>
@@ -150,10 +154,14 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import Chart from 'chart.js/auto'
-import { getUserCount, getFandomCount, getPostCount, getMediaCount } from '@/api/stats'
+import { getUserCount, getFandomCount, getPostCount, getMediaCount, getTopTrendingFandoms } from '@/api/stats'
 import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 const topStats = ref({ users: 0, fandoms: 0, posts: 0, medias: 0 })
+
+// Top Fandoms state
+const topFandoms = ref([])
+const topFandomsLoading = ref(false)
 
 const fetchTopStats = async () => {
   try {
@@ -163,9 +171,55 @@ const fetchTopStats = async () => {
       getPostCount(auth.token),
       getMediaCount(auth.token)
     ])
-    topStats.value.users = users.count || 0
-    topStats.value.fandoms = fandoms.count || 0
+    topStats.value.users = users.user_count || users.count || 0
+    topStats.value.fandoms = fandoms.fandom_count || fandoms.count || 0
+    //response is like :
+    /*
+    {
+    "success": true,
+    "post_counts": [
+        {
+            "content_status": "draft",
+            "count": 8
+        },
+        {
+            "content_status": "published",
+            "count": 5
+        },
+        {
+            "content_status": "archived",
+            "count": 7
+        }
+    ]
+}
+     */
+
+    const draft_posts = posts.post_counts.find(p => p.content_status === 'draft') || { count: 0 }
+    const published_posts = posts.post_counts.find(p => p.content_status === 'published') || {
+      count: 0
+    }
+    const archived_posts = posts.post_counts.find(p => p.content_status === 'archived') || { count: 0 }
+    posts.count = draft_posts.count + published_posts.count + archived_posts.count
     topStats.value.posts = posts.count || 0
+
+    //for medias response like :
+    /*
+{
+    "success": true,
+    "media_counts": [
+        {
+            "media_type": "image",
+            "count": 2
+        }
+    ]
+}
+     */
+
+    const image_medias = medias.media_counts.find(m => m.media_type === 'image') || { count: 0 }
+    const video_medias = medias.media_counts.find(m => m.media_type === 'video')
+      || { count: 0 }
+    const audio_medias = medias.media_counts.find(m => m.media_type === 'audio') || { count: 0 }
+    medias.count = image_medias.count + video_medias.count + audio_medias.count
     topStats.value.medias = medias.count || 0
   } catch (e) {
     // Optionally handle error
@@ -222,7 +276,34 @@ const renderTrafficChart = () => {
 onMounted(() => {
   renderTrafficChart()
   fetchTopStats()
+  fetchTopFandoms()
 })
+// Fetch top fandoms from API
+const fetchTopFandoms = async () => {
+  topFandomsLoading.value = true
+  try {
+    const res = await getTopTrendingFandoms(auth.token)
+    let fandoms = (res && res.data && Array.isArray(res.data.fandoms)) ? res.data.fandoms : []
+    // Sort by members_count desc, then posts_count desc
+    fandoms = fandoms.sort((a, b) => {
+      if (b.members_count !== a.members_count) return b.members_count - a.members_count
+      return b.posts_count - a.posts_count
+    })
+    topFandoms.value = fandoms.slice(0, 5)
+  } catch (e) {
+    topFandoms.value = []
+    console.error('Error fetching top fandoms:', e)
+  } finally {
+    topFandomsLoading.value = false
+  }
+}
+
+// Helper for fandom bar width (relative to top fandom)
+const getFandomBarWidth = (fandom) => {
+  if (!topFandoms.value.length) return 0
+  const max = Math.max(...topFandoms.value.map(f => f.members_count)) || 1
+  return Math.round((fandom.members_count / max) * 100)
+}
 
 watch(selectedRange, () => {
   renderTrafficChart()
@@ -251,13 +332,7 @@ const stats = ref({
     total: 5243,
     newThisPeriod: 243
   },
-  topFandoms: [
-    { name: 'Marvel Cinematic Universe', engagement: 12543, percentage: 100 },
-    { name: 'Star Wars', engagement: 9872, percentage: 78 },
-    { name: 'K-Pop Global', engagement: 7654, percentage: 61 },
-    { name: 'Anime Universe', engagement: 5432, percentage: 43 },
-    { name: 'Fantasy Books', engagement: 3210, percentage: 25 }
-  ],
+  // topFandoms removed, now fetched from API
   recentActivity: [
     { type: 'purchase', item: 'Spider-Man Poster', user: 'user_marvelfan', time: '2 mins ago', value: '$24.99' },
     { type: 'post', item: 'New Theory About Loki', user: 'user_timekeeper', time: '15 mins ago', value: '1.2k views' },
