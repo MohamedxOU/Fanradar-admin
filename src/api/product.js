@@ -18,9 +18,12 @@ export const getProducts = async (page = 1, token) => {
 }
 
 //get product by id
-export const getProductById = async (id) => {
+export const getProductById = async (id, token) => {
   try {
     const response = await apiClient.get(`/products/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
     return response.data;
   }

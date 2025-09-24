@@ -244,11 +244,9 @@
     <!-- Modal Component -->
     <AddProductModal ref="addProductModalRef" @product-added="fetchProducts" />
 
-    <!-- Update Product Modal -->
-    <UpdateProductModal
-      v-if="showEditProductModal"
+    <!-- Edit Product Modal -->
+    <EditProductModal
       ref="editProductModalRef"
-      :product="productToEdit"
       @close="closeEditProductModal"
       @updated="onProductUpdated"
     />
@@ -258,7 +256,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AddProductModal from '@/components/admin/AddProductModal.vue'
-import UpdateProductModal from '@/components/admin/UpdateProductModal.vue'
+import EditProductModal from '@/components/admin/EditProductModal.vue'
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -438,28 +436,17 @@ const resolveMediaUrl = (media) => {
 }
 
 // Edit product modal
-const showEditProductModal = ref(false)
-const productToEdit = ref(null)
+const editProductModalRef = ref(null)
 
 const openEditProductModal = (product) => {
-  productToEdit.value = { ...product }
-  showEditProductModal.value = true
-  // Wait for modal to mount, then call openModal
-  setTimeout(() => {
-    if (editProductModalRef.value) {
-      editProductModalRef.value.openModal()
-    }
-  }, 0)
+  if (editProductModalRef.value) {
+    editProductModalRef.value.openModal(product.id)
+  }
 }
-const closeEditProductModal = () => {
-  showEditProductModal.value = false
-  productToEdit.value = null
-}
+const closeEditProductModal = () => {}
 const onProductUpdated = () => {
-  closeEditProductModal()
   fetchProducts(currentPage.value)
 }
-const editProductModalRef = ref(null)
 </script>
 
 <style scoped>
