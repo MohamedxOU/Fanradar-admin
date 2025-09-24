@@ -159,7 +159,6 @@ import {
   ShoppingCartIcon as ShopCartIcon,
 
   PresentationChartLineIcon as FandomTrackerIcon,
-  ChartBarSquareIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -254,7 +253,7 @@ const shopDropItems = [
 ]
 
 const otherItems = [
-{route : '/analytics', label: 'Analytics', icon: ChartBarSquareIcon},
+
 
 
 ]

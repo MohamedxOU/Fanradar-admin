@@ -254,7 +254,7 @@ const fetchFandoms = async () => {
       if (!img) return ''
       if (img.startsWith('http://') || img.startsWith('https://')) return img
       // Always prepend backend URL for storage paths
-      return `http://localhost:8000/${img}`
+      return `${import.meta.env.VITE_STORAGE_URL}/${img}`
     }
     fandoms.value = (res?.data?.fandoms || []).map(f => ({
       id: f.id,

@@ -14,7 +14,6 @@ import ScheduledPosts from '@/views/admin/ScheduledPosts.vue'
 import ProductsView from '@/views/admin/ProductsView.vue'
 import OrdersPage from '@/views/admin/OrdersPage.vue'
 import RadarTracker from '@/views/admin/RadarTracker.vue'
-import AnalyticsView from '@/views/admin/AnalyticsView.vue'
 
 import CategorySubCatView from '@/views/admin/CategorySubCatView.vue'
 import ProfileView from '@/views/account/ProfileView.vue'
@@ -100,12 +99,6 @@ const router = createRouter({
           path : 'radar-tracker',
           name: 'radar-tracker',
           component: RadarTracker,
-        },
-        {
-          path : 'analytics',
-          name: 'analytics',
-          component: AnalyticsView,
-
         },
 
 

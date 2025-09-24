@@ -21,86 +21,7 @@
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <!-- Total Orders -->
-      <div class="card bg-base-100 shadow">
-        <div class="card-body p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-sm font-medium text-base-content/60">Total Orders</h2>
-              <p class="text-3xl font-bold mt-1">{{ formatNumber(stats.totalOrders) }}</p>
-            </div>
-            <div class="p-3 rounded-full bg-primary/10">
-              <ShoppingBagIcon class="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          <div class="mt-2 flex items-center text-sm" :class="stats.ordersChange >= 0 ? 'text-success' : 'text-error'">
-            <ArrowTrendingUpIcon v-if="stats.ordersChange >= 0" class="h-4 w-4" />
-            <ArrowTrendingDownIcon v-else class="h-4 w-4" />
-            <span class="ml-1">{{ Math.abs(stats.ordersChange) }}% vs last period</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Revenue -->
-      <div class="card bg-base-100 shadow">
-        <div class="card-body p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-sm font-medium text-base-content/60">Total Revenue</h2>
-              <p class="text-3xl font-bold mt-1">${{ formatNumber(stats.totalRevenue) }}</p>
-            </div>
-            <div class="p-3 rounded-full bg-success/10">
-              <CurrencyDollarIcon class="h-6 w-6 text-success" />
-            </div>
-          </div>
-          <div class="mt-2 flex items-center text-sm" :class="stats.revenueChange >= 0 ? 'text-success' : 'text-error'">
-            <ArrowTrendingUpIcon v-if="stats.revenueChange >= 0" class="h-4 w-4" />
-            <ArrowTrendingDownIcon v-else class="h-4 w-4" />
-            <span class="ml-1">{{ Math.abs(stats.revenueChange) }}% vs last period</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Average Order Value -->
-      <div class="card bg-base-100 shadow">
-        <div class="card-body p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-sm font-medium text-base-content/60">Avg. Order Value</h2>
-              <p class="text-3xl font-bold mt-1">${{ formatNumber(stats.avgOrderValue) }}</p>
-            </div>
-            <div class="p-3 rounded-full bg-info/10">
-              <ChartBarIcon class="h-6 w-6 text-info" />
-            </div>
-          </div>
-          <div class="mt-2 flex items-center text-sm" :class="stats.aovChange >= 0 ? 'text-success' : 'text-error'">
-            <ArrowTrendingUpIcon v-if="stats.aovChange >= 0" class="h-4 w-4" />
-            <ArrowTrendingDownIcon v-else class="h-4 w-4" />
-            <span class="ml-1">{{ Math.abs(stats.aovChange) }}% vs last period</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Fulfillment Status -->
-      <div class="card bg-base-100 shadow">
-        <div class="card-body p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-sm font-medium text-base-content/60">Fulfillment Rate</h2>
-              <p class="text-3xl font-bold mt-1">{{ stats.fulfillmentRate }}%</p>
-            </div>
-            <div class="p-3 rounded-full bg-warning/10">
-              <TruckIcon class="h-6 w-6 text-warning" />
-            </div>
-          </div>
-          <div class="mt-2">
-            <progress class="progress progress-warning w-full" :value="stats.fulfillmentRate" max="100"></progress>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Filters Panel -->
     <div v-if="showFilters" class="bg-base-100 rounded-lg shadow p-6 mb-6">
@@ -311,16 +232,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import {
-  ShoppingBagIcon,
-  CurrencyDollarIcon,
-  ChartBarIcon,
-  TruckIcon,
+
   ArrowDownTrayIcon,
   FunnelIcon,
   EyeIcon,
   EllipsisVerticalIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon
+
 } from '@heroicons/vue/24/outline'
 import OrderDetailsModal from '../../components/admin/OrderDetailsModal.vue'
 
@@ -379,16 +296,7 @@ onMounted(() => {
   fetchOrders()
 })
 
-// Stats
-const stats = ref({
-  totalOrders: 1243,
-  ordersChange: 12.5,
-  totalRevenue: 45678.50,
-  revenueChange: 8.2,
-  avgOrderValue: 89.45,
-  aovChange: 3.7,
-  fulfillmentRate: 87
-})
+
 
 // Filters
 const showFilters = ref(false)
@@ -526,10 +434,7 @@ const exportOrders = () => {
   // Implement export functionality
 }
 
-// Helpers
-const formatNumber = (num) => {
-  return new Intl.NumberFormat().format(num)
-}
+
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
