@@ -36,14 +36,24 @@ export const getCategoryWithSubCategories = async (id, token) => {
 //create category
 export const createCategory = async (categoryData, token) => {
   try {
+    const headers = {
+      Authorization: `Bearer ${token}`
+    }
+
+    // Don't set Content-Type for FormData, let browser handle it
+    if (!(categoryData instanceof FormData)) {
+      headers['Content-Type'] = 'application/json'
+    }
+
     const response = await apiClient.post("/categories", categoryData, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers
     });
     return response.data;
   }
   catch (error) {
+    console.error('CreateCategory API Error:', error)
+    console.error('Response status:', error.response?.status)
+    console.error('Response data:', error.response?.data)
     throw error.response ? error.response.data : error.message;
   }
 }

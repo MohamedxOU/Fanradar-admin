@@ -32,7 +32,12 @@
 					</thead>
 					<tbody>
 						<tr v-for="category in paginatedCategories" :key="category.id">
-							<td class="font-semibold truncate" :title="category.name">{{ category.name }}</td>
+							<td class="font-semibold truncate" :title="category.name">
+								<div class="flex items-center gap-3">
+									<img v-if="category.image" :src="resolveImageUrl(category.image)" :alt="category.name" class="w-36 h-36 rounded object-cover" />
+									<span>{{ category.name }}</span>
+								</div>
+							</td>
 							<td>
 								<ul>
 									<li v-for="sub in category.subcategories" :key="sub.id" class="flex items-center justify-between">
@@ -93,6 +98,12 @@ const showAddSubcategory = ref(false)
 const addSubcategoryCategoryId = ref(null)
 const auth = useAuthStore()
 
+// Helper function to resolve image URLs
+const resolveImageUrl = (imagePath) => {
+	if (!imagePath) return ''
+	if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath
+	return `${import.meta.env.VITE_STORAGE_URL}/storage/${imagePath}`
+}
 
 // Pagination and search
 const search = ref('')
