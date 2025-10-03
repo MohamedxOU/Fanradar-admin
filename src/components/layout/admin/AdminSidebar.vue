@@ -53,6 +53,38 @@
         </ul>
       </div>
 
+      <!-- Fandoms Section -->
+      <div class="mb-2">
+        <div v-if="!isCollapsed || isMobile" class="flex items-center justify-between mb-2 px-2 cursor-pointer"
+          @click="toggleFandomsDropdown">
+          <h3 class="text-xs font-medium text-base-content/60 uppercase tracking-wider">Fandoms</h3>
+          <ChevronDownIcon class="w-4 h-4 text-base-content/40 transition-transform duration-200"
+            :class="{ 'rotate-180': isFandomsDropdownOpen }" />
+        </div>
+        <div v-else class="hidden">
+          <button @click="toggleFandomsDropdown" class="p-2 rounded-lg hover:bg-base-300" title="Fandoms">
+
+          </button>
+        </div>
+
+        <ul v-if="isFandomsDropdownOpen || isCollapsed" class="space-y-1"
+          :class="{ 'ml-3 pl-2 border-l border-base-300': !isCollapsed && !isMobile }">
+          <li v-for="item in fandomsItems" :key="item.route">
+            <router-link :to="item.route" class="flex items-center px-2 py-2 text-sm rounded-lg transition-colors group"
+              :class="[
+                isCollapsed && !isMobile ? 'justify-center' : '',
+                $route.path === item.route
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-base-content hover:bg-base-300'
+              ]" :title="isCollapsed && !isMobile ? item.label : ''" @click="isMobile && toggleMobileSidebar()">
+              <component :is="item.icon" class="w-5 h-5 flex-shrink-0"
+                :class="[isCollapsed && !isMobile ? '' : 'mr-3']" />
+              <span v-if="!isCollapsed || isMobile">{{ item.label }}</span>
+            </router-link>
+          </li>
+        </ul>
+      </div>
+
       <!-- Content management Section -->
       <div class="mb-2">
         <div v-if="!isCollapsed || isMobile" class="flex items-center justify-between mb-2 px-2 cursor-pointer"
@@ -173,6 +205,7 @@ const isSidebarOpen = ref(false)
 const isMobile = ref(false)
 const isCardsDropdownOpen = ref(true)
 const isShopsDropsDropdownOpen = ref(true)
+const isFandomsDropdownOpen = ref(true)
 
 // Toggle sidebar collapse (desktop)
 const toggleCollapse = () => {
@@ -192,6 +225,10 @@ const toggleCardsDropdown = () => {
 
 const toggleShopDropdsDropdown = () => {
   isShopsDropsDropdownOpen.value = !isShopsDropsDropdownOpen.value
+}
+
+const toggleFandomsDropdown = () => {
+  isFandomsDropdownOpen.value = !isFandomsDropdownOpen.value
 }
 
 // Handle responsive behavior
@@ -231,12 +268,8 @@ onBeforeUnmount(() => {
 const generalItems = [
   { route: '/', label: 'Dashboard', icon: HomeIcon, exact: true },
   { route: '/users', label: 'Users', icon: UsersIcon },
-  { route: '/fandoms', label: 'Fandoms', icon: UserGroupIcon },
   { route: '/categories-subcategories', label: 'Category and subcategory', icon: TagIcon },
   {route : '/radar-tracker', label: 'Radar tracker', icon: FandomTrackerIcon, exact: true}
-
-
-
 ]
 
 const cmsItems = [
@@ -245,6 +278,11 @@ const cmsItems = [
 
   { route: '/pending-posts', label: 'Pending posts', icon: PendingPostsIcon },
   {route: '/scheduled-posts', label: 'Scheduled posts', icon: ScheduledPostsIcon }
+]
+
+const fandomsItems = [
+  { route: '/fandoms', label: 'Active fandoms', icon: UserGroupIcon },
+  { route: '/fandoms/inactive', label: 'Inactive fandoms', icon: UserGroupIcon }
 ]
 
 const shopDropItems = [

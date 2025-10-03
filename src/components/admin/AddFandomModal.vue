@@ -91,6 +91,35 @@
           </select>
         </div>
 
+        <!-- Is Active -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Is Active</span>
+          </label>
+          <div class="flex items-center gap-4">
+            <label class="cursor-pointer label">
+              <input
+                type="radio"
+                name="isactive"
+                class="radio radio-primary"
+                :value="true"
+                v-model="newFandom.isactive"
+              />
+              <span class="label-text ml-2">Active</span>
+            </label>
+            <label class="cursor-pointer label">
+              <input
+                type="radio"
+                name="isactive"
+                class="radio radio-primary"
+                :value="false"
+                v-model="newFandom.isactive"
+              />
+              <span class="label-text ml-2">Inactive</span>
+            </label>
+          </div>
+        </div>
+
         <!-- Description -->
         <div class="form-control">
           <label class="label">
@@ -120,7 +149,7 @@ import { createFandom } from '@/api/fandoms'
 import { getCategories, getSubCategories } from '@/api/categoryAndSubCat'
 import { useAuthStore } from '@/stores/auth'
 
-
+ 
 
 
 const emit = defineEmits(['close', 'save'])
@@ -134,6 +163,7 @@ const newFandom = ref({
   categoryId: '',
   subcategoryId: '',
   description: '',
+  isactive: true,
   imageFile: null,
   coverFile: null
 })
@@ -181,6 +211,7 @@ const save = async () => {
     formData.append('name', newFandom.value.name)
     formData.append('description', newFandom.value.description)
     formData.append('category_id', newFandom.value.categoryId)
+    formData.append('isactive', newFandom.value.isactive ? 1 : 0)
     if (newFandom.value.subcategoryId) {
       formData.append('subcategory_id', newFandom.value.subcategoryId)
     }
@@ -199,6 +230,7 @@ const save = async () => {
       categoryId: '',
       subcategoryId: '',
       description: '',
+      isactive: true,
       imageFile: null,
       coverFile: null
     }

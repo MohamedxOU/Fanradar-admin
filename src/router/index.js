@@ -8,6 +8,7 @@ import AdminDashboardHome from '@/views/admin/AdminDashboardHome.vue'
 import UserManagement from '@/views/admin/UserManagement.vue'
 import AllPosts from '@/views/admin/AllPosts.vue'
 import FandomsView from '@/views/admin/FandomsView.vue'
+import InactiveFandomsView from '@/views/admin/InactiveFandomsView.vue'
 import PendingPosts from '@/views/admin/PendingPosts.vue'
 import ScheduledPosts from '@/views/admin/ScheduledPosts.vue'
 
@@ -79,6 +80,11 @@ const router = createRouter({
           path: 'fandoms',
           name: 'fandoms',
           component: FandomsView,
+        },
+        {
+          path: 'fandoms/inactive',
+          name: 'fandoms-inactive',
+          component: InactiveFandomsView,
         },
 
         {
